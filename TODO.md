@@ -10,6 +10,7 @@
 - [x] Wire Community and Home report/volunteer forms to backend endpoints.
 - [x] Store donation slips privately and protect admin slip/certificate downloads.
 - [x] Add a safe Hostinger SSH deployment workflow that preserves `.env` and `storage/`.
+- [x] Mirror only Laravel `public/` assets into a fixed Hostinger `public_html` root when needed.
 
 ## P0 — Before production
 

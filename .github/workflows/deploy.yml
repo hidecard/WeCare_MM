@@ -38,6 +38,7 @@ jobs:
       - name: Deploy over SSH
         env:
           APP_PATH: ${{ secrets.HOSTINGER_APP_PATH }}
+          PUBLIC_PATH: ${{ secrets.HOSTINGER_PUBLIC_PATH }}
           SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
           SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
           SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
@@ -49,11 +50,12 @@ jobs:
             -o BatchMode=yes \
             -o StrictHostKeyChecking=yes \
             "$SSH_USER@$SSH_HOST" \
-            "bash -s -- $(printf '%q' "$APP_PATH") $(printf '%q' "$DEPLOY_SHA")" <<'REMOTE_SCRIPT'
+            "bash -s -- $(printf '%q' "$APP_PATH") $(printf '%q' "$DEPLOY_SHA") $(printf '%q' "$PUBLIC_PATH")" <<'REMOTE_SCRIPT'
           set -Eeuo pipefail
 
           APP_PATH="$1"
           DEPLOY_SHA="$2"
+          PUBLIC_PATH="${3:-}"
           REPOSITORY="https://github.com/hidecard/WeCare_MM.git"
 
           if [ -z "$APP_PATH" ] || [ "$APP_PATH" = "/" ]; then
@@ -99,8 +101,58 @@ jobs:
           php artisan storage:link || test -L public/storage
           php artisan optimize:clear
 
+          # Hostinger commonly keeps the domain document root at public_html.
+          # Keep the complete Laravel application in APP_PATH and mirror only
+          # public web assets into public_html. Never copy .env, app/, vendor/,
+          # database/, or storage data into the web root.
+          if [ -z "$PUBLIC_PATH" ]; then
+              PUBLIC_PATH="$(dirname "$APP_PATH")/public_html"
+          fi
+
+          if [ "$PUBLIC_PATH" = "$APP_PATH" ] || [ "$PUBLIC_PATH" = "$APP_PATH/public" ]; then
+              echo "Using Laravel public directory directly: $PUBLIC_PATH"
+          else
+              mkdir -p "$PUBLIC_PATH"
+
+              for item in public/* public/.[!.]*; do
+                  [ -e "$item" ] || continue
+                  [ "$(basename "$item")" = "storage" ] && continue
+                  cp -a "$item" "$PUBLIC_PATH/"
+              done
+
+              if [ -e "$PUBLIC_PATH/storage" ] && [ ! -L "$PUBLIC_PATH/storage" ]; then
+                  echo "Refusing to replace a real public_html/storage directory."
+                  echo "Move it aside after confirming it contains no unique uploads."
+                  exit 1
+              fi
+              rm -f "$PUBLIC_PATH/storage"
+              ln -s "$APP_PATH/storage/app/public" "$PUBLIC_PATH/storage"
+
+              APP_RELATIVE_PATH="$(realpath --relative-to="$PUBLIC_PATH" "$APP_PATH")"
+              cat > "$PUBLIC_PATH/index.php" <<PHP
+          <?php
+
+          use Illuminate\Foundation\Application;
+          use Illuminate\Http\Request;
+
+          define('LARAVEL_START', microtime(true));
+
+          if (file_exists(\$maintenance = __DIR__.'/$APP_RELATIVE_PATH/storage/framework/maintenance.php')) {
+              require \$maintenance;
+          }
+
+          require __DIR__.'/$APP_RELATIVE_PATH/vendor/autoload.php';
+
+          /** @var Application \$app */
+          \$app = require_once __DIR__.'/$APP_RELATIVE_PATH/bootstrap/app.php';
+
+          \$app->handleRequest(Request::capture());
+          PHP
+          fi
+
           echo "Deployment completed for commit $DEPLOY_SHA"
           echo "Persistent files were preserved: .env, storage/, and vendor/ were not cleaned."
+          echo "Public web root synchronized to: $PUBLIC_PATH"
           REMOTE_SCRIPT
 
       - name: Remove temporary SSH material
