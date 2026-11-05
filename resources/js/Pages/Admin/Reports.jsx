@@ -49,6 +49,7 @@ export default function Reports({ spotReports = [] }) {
     const pagination = normalizedReports;
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [drafts, setDrafts] = useState({});
     const navItems = [
         { name: 'Overview', href: route('admin.dashboard'), icon: LayoutDashboard },
         { name: 'Donation Review', href: route('admin.donations.index'), icon: ShieldAlert },
@@ -61,6 +62,7 @@ export default function Reports({ spotReports = [] }) {
     const statusStyles = {
         unread: 'bg-slate-100 text-slate-700',
         checked: 'bg-amber-100 text-amber-700',
+        in_progress: 'bg-blue-100 text-blue-700',
         resolved: 'bg-emerald-100 text-emerald-700',
     };
 
@@ -68,6 +70,27 @@ export default function Reports({ spotReports = [] }) {
         if (!pageUrl) return;
         router.get(pageUrl, { preserveScroll: true });
     };
+
+    const draftFor = (report) => drafts[report.id] ?? {
+        status: report.status,
+        urgency: report.urgency || 'normal',
+        assigned_to: report.assigned_to || '',
+        follow_up_note: report.follow_up_note || '',
+    };
+
+    const updateDraft = (report, field, value) => setDrafts((current) => ({
+        ...current,
+        [report.id]: { ...draftFor(report), [field]: value },
+    }));
+
+    const saveWorkflow = (report) => router.patch(route('admin.reports.update', report.id), draftFor(report), {
+        preserveScroll: true,
+        onSuccess: () => setDrafts((current) => {
+            const next = { ...current };
+            delete next[report.id];
+            return next;
+        }),
+    });
 
     return (
         <>
@@ -144,7 +167,7 @@ export default function Reports({ spotReports = [] }) {
                                                     <th className="px-4 py-3 font-semibold">Condition</th>
                                                     <th className="px-4 py-3 font-semibold">Seen</th>
                                                     <th className="px-4 py-3 font-semibold">Reporter</th>
-                                                    <th className="px-4 py-3 font-semibold">Status</th>
+                                                    <th className="px-4 py-3 font-semibold">Workflow</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-200 bg-white text-sm text-slate-700">
@@ -159,10 +182,20 @@ export default function Reports({ spotReports = [] }) {
                                                         <td className="px-4 py-3">{report.condition_note}</td>
                                                         <td className="px-4 py-3">{formatDateTime(report.time_seen)}</td>
                                                         <td className="px-4 py-3">{report.reporter_phone || 'Anonymous'}</td>
-                                                        <td className="px-4 py-3">
-                                                            <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${statusStyles[report.status] ?? 'bg-slate-100 text-slate-700'}`}>
-                                                                {report.status}
-                                                            </span>
+                                                        <td className="min-w-[280px] px-4 py-3">
+                                                            <div className="space-y-2">
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    <select value={draftFor(report).status} onChange={(event) => updateDraft(report, 'status', event.target.value)} className={`rounded-full border-0 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${statusStyles[draftFor(report).status] ?? 'bg-slate-100 text-slate-700'}`}>
+                                                                        {['unread', 'checked', 'in_progress', 'resolved'].map((status) => <option key={status} value={status}>{status}</option>)}
+                                                                    </select>
+                                                                    <select value={draftFor(report).urgency} onChange={(event) => updateDraft(report, 'urgency', event.target.value)} className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-600">
+                                                                        {['low', 'normal', 'high', 'urgent'].map((urgency) => <option key={urgency} value={urgency}>{urgency}</option>)}
+                                                                    </select>
+                                                                </div>
+                                                                <input value={draftFor(report).assigned_to} onChange={(event) => updateDraft(report, 'assigned_to', event.target.value)} placeholder="Assigned to" className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs" />
+                                                                <textarea value={draftFor(report).follow_up_note} onChange={(event) => updateDraft(report, 'follow_up_note', event.target.value)} placeholder="Follow-up note" rows="2" className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs" />
+                                                                <button type="button" onClick={() => saveWorkflow(report)} className="rounded-full bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white">Save workflow</button>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 ))}

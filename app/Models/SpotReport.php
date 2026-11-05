@@ -16,5 +16,14 @@ class SpotReport extends Model
         'condition_note',
         'reporter_phone',
         'status',
+        'urgency',
+        'assigned_to',
+        'follow_up_note',
+        'resolved_at',
     ];
+
+    protected function casts(): array
+    {
+        return ['resolved_at' => 'datetime'];
+    }
 }

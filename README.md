@@ -121,11 +121,17 @@ FILESYSTEM_DISK=local
 QUEUE_CONNECTION=database
 CACHE_STORE=database
 
-# Required when running DatabaseSeeder in production
 WECARE_ADMIN_PASSWORD=use-a-long-random-secret
+WECARE_ADMIN_EMAIL=admin@example.org
 ```
 
-For production, set `APP_DEBUG=false`, use a real `APP_KEY`, configure the production database, set a real mail provider, and provide a strong `WECARE_ADMIN_PASSWORD` only through the server environment or secret manager. Do not use the local fallback credentials in production.
+For production, set `APP_DEBUG=false`, use a real `APP_KEY`, configure the production database, set a real mail provider, and keep payment account values only in the server environment. Do not seed production or use the local fallback credentials. After migrations, create the administrator once with:
+
+```bash
+php artisan wecare:bootstrap-admin --email=admin@example.org
+```
+
+The command prompts for the password without storing it in shell history. Payment accounts are managed by administrators from **Admin → Payment Methods** and stored in the database. Only active methods are shown to donors; QR images are uploaded through that admin screen.
 
 ## Database and migrations
 

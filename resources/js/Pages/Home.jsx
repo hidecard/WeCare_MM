@@ -23,13 +23,6 @@ const formatDisplayDate = (value) => {
     }).format(parsed);
 };
 
-const paymentDetails = {
-    KBZPay: { phone: '09 123 456 789', label: 'KBZPay QR' },
-    WavePay: { phone: '09 987 654 321', label: 'WavePay QR' },
-    AYAPay: { phone: '09 555 666 777', label: 'AYA Pay QR' },
-    CBPay: { phone: '09 333 444 555', label: 'CB Pay QR' },
-};
-
 const renderTripPagination = (pageCount, currentPage, onPageChange) => {
     if (pageCount <= 1) {
         return null;
@@ -51,12 +44,12 @@ const renderTripPagination = (pageCount, currentPage, onPageChange) => {
     );
 };
 
-export default function Home({ impact = {}, fundPools = [], recentDonations = [], recentTrips = [], financialSummary = {} }) {
+export default function Home({ impact = {}, fundPools = [], recentDonations = [], recentTrips = [], financialSummary = {}, paymentDetails = {} }) {
     const { flash = {} } = usePage().props;
     const [lang, setLang] = useState('my');
     const [selectedPoolId, setSelectedPoolId] = useState(fundPools[0]?.id ?? 1);
     const [selectedAmount, setSelectedAmount] = useState(10000);
-    const [selectedPayment, setSelectedPayment] = useState('KBZPay');
+    const [selectedPayment, setSelectedPayment] = useState(Object.keys(paymentDetails)[0] ?? '');
     const [copiedNumber, setCopiedNumber] = useState('');
     const [step, setStep] = useState(1);
     const [activeCommunityTab, setActiveCommunityTab] = useState('report');
@@ -156,7 +149,7 @@ export default function Home({ impact = {}, fundPools = [], recentDonations = []
                 setStep(1);
                 setSelectedPoolId(fundPools[0]?.id ?? 1);
                 setSelectedAmount(10000);
-                setSelectedPayment('KBZPay');
+                setSelectedPayment(Object.keys(paymentDetails)[0] ?? '');
             },
         });
     };
@@ -378,10 +371,11 @@ export default function Home({ impact = {}, fundPools = [], recentDonations = []
                                             onClick={() => handlePaymentSelect(method)}
                                             className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left ${selectedPayment === method ? 'border-[#F59E0B] bg-[#F59E0B]/10' : 'border-white/10 bg-white/5'}`}
                                         >
-                                            <div>
-                                                <p className="font-semibold">{method}</p>
-                                                <p className="text-xs text-emerald-50/80">{details.label}</p>
-                                            </div>
+                                                <div>
+                                                    <p className="font-semibold text-white">{method}</p>
+                                                    <p className="text-xs text-emerald-50/80">{details.label}</p>
+                                                    {details.qr_url && <img src={details.qr_url} alt={`${method} QR`} className="mt-2 h-20 w-20 rounded-lg bg-white object-contain p-1" />}
+                                                </div>
                                             <span className="rounded-full bg-white/10 px-2 py-1 text-xs font-medium">{details.phone}</span>
                                         </button>
                                     ))}

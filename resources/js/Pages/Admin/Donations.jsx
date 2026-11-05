@@ -1,5 +1,5 @@
 ﻿import { Head, Link, router } from '@inertiajs/react';
-import { BarChart3, Check, ChevronLeft, ChevronRight, FileImage, FileText, LayoutDashboard, MapPinned, Menu, ShieldAlert, Trash2, Users } from 'lucide-react';
+import { BarChart3, Check, ChevronLeft, ChevronRight, FileImage, FileText, LayoutDashboard, List, MapPinned, Menu, ShieldAlert, Trash2, Users } from 'lucide-react';
 import { useState } from 'react';
 
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
@@ -35,6 +35,7 @@ export default function Donations({ pendingDonations = [] }) {
     const navItems = [
         { name: 'Overview', href: route('admin.dashboard'), icon: LayoutDashboard },
         { name: 'Donation Review', href: route('admin.donations.index'), icon: ShieldAlert },
+        { name: 'Donation List', href: route('admin.donations.list'), icon: List },
         { name: 'Trip Tracker', href: route('admin.trips.index'), icon: MapPinned },
         { name: 'Spot Reports', href: route('admin.reports.index'), icon: FileText },
         { name: 'Fund Pools', href: route('admin.fund-pools.index'), icon: BarChart3 },

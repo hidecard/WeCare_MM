@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SpotReportController;
@@ -14,10 +15,10 @@ Route::get('/outreach', [HomeController::class, 'outreach'])->name('outreach');
 Route::get('/community', [HomeController::class, 'community'])->name('community');
 Route::middleware(['auth', 'verified'])->get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-Route::post('/donations', [DonationController::class, 'store'])->name('donations.store');
+Route::middleware('throttle:10,1')->post('/donations', [DonationController::class, 'store'])->name('donations.store');
 Route::get('/donations/{donation}/certificate/{certificateCode}', [DonationController::class, 'downloadCertificate'])->name('donations.certificate');
-Route::post('/spot-reports', [SpotReportController::class, 'store'])->name('spot-reports.store');
-Route::post('/volunteers', [VolunteerController::class, 'store'])->name('volunteers.store');
+Route::middleware('throttle:5,1')->post('/spot-reports', [SpotReportController::class, 'store'])->name('spot-reports.store');
+Route::middleware('throttle:5,10')->post('/volunteers', [VolunteerController::class, 'store'])->name('volunteers.store');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
@@ -31,9 +32,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/fund-pools', [DashboardController::class, 'fundPoolsIndex'])->name('admin.fund-pools.index');
     Route::get('/admin/volunteers', [DashboardController::class, 'volunteersIndex'])->name('admin.volunteers.index');
     Route::get('/admin/donations', [DashboardController::class, 'donationsIndex'])->name('admin.donations.index');
+    Route::get('/admin/donations/list', [DashboardController::class, 'donationListIndex'])->name('admin.donations.list');
     Route::get('/admin/donations/{donation}/slip', [DashboardController::class, 'downloadDonationSlip'])->name('admin.donations.slip');
     Route::get('/admin/trips', [DashboardController::class, 'tripsIndex'])->name('admin.trips.index');
     Route::get('/admin/reports', [DashboardController::class, 'spotReportsIndex'])->name('admin.reports.index');
+    Route::patch('/admin/reports/{spotReport}', [DashboardController::class, 'updateSpotReport'])->name('admin.reports.update');
+    Route::get('/admin/payment-methods', [PaymentMethodController::class, 'index'])->name('admin.payment-methods.index');
     Route::patch('/admin/donations/{donation}/status', [DashboardController::class, 'updateDonationStatus'])->name('admin.donations.update-status');
     Route::post('/admin/outreach-trips', [DashboardController::class, 'storeOutreachTrip'])->name('admin.outreach-trips.store');
     Route::patch('/admin/outreach-trips/{outreachTrip}', [DashboardController::class, 'updateOutreachTrip'])->name('admin.outreach-trips.update');
@@ -44,6 +48,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/volunteers', [DashboardController::class, 'storeVolunteer'])->name('admin.volunteers.store');
     Route::patch('/admin/volunteers/{volunteer}', [DashboardController::class, 'updateVolunteer'])->name('admin.volunteers.update');
     Route::delete('/admin/volunteers/{volunteer}', [DashboardController::class, 'destroyVolunteer'])->name('admin.volunteers.destroy');
+    Route::post('/admin/payment-methods', [PaymentMethodController::class, 'store'])->name('admin.payment-methods.store');
+    Route::patch('/admin/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'update'])->name('admin.payment-methods.update');
+    Route::delete('/admin/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroy'])->name('admin.payment-methods.destroy');
 });
 
 require __DIR__.'/auth.php';

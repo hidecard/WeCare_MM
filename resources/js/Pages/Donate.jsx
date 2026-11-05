@@ -5,18 +5,11 @@ import PublicLayout from '../Components/PublicLayout';
 
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
 
-const paymentDetails = {
-    KBZPay: { phone: '09 123 456 789', label: 'KBZPay QR' },
-    WavePay: { phone: '09 987 654 321', label: 'WavePay QR' },
-    AYAPay: { phone: '09 555 666 777', label: 'AYA Pay QR' },
-    CBPay: { phone: '09 333 444 555', label: 'CB Pay QR' },
-};
-
-export default function Donate({ fundPools = [] }) {
+export default function Donate({ fundPools = [], paymentDetails = {} }) {
     const [lang, setLang] = useState('my');
     const [selectedPoolId, setSelectedPoolId] = useState(fundPools[0]?.id ?? 1);
     const [selectedAmount, setSelectedAmount] = useState(10000);
-    const [selectedPayment, setSelectedPayment] = useState('KBZPay');
+    const [selectedPayment, setSelectedPayment] = useState(Object.keys(paymentDetails)[0] ?? '');
     const [showSuccess, setShowSuccess] = useState(false);
     const [step, setStep] = useState(1);
 
@@ -177,6 +170,7 @@ export default function Donate({ fundPools = [] }) {
                                             <div>
                                                 <p className="font-semibold">{method}</p>
                                                 <p className="text-xs text-emerald-50/80">{details.label}</p>
+                                                {details.qr_url && <img src={details.qr_url} alt={`${method} QR`} className="mt-2 h-20 w-20 rounded-lg bg-white object-contain p-1" />}
                                             </div>
                                             <span className="rounded-full bg-white/10 px-2 py-1 text-xs font-medium">{details.phone}</span>
                                         </button>

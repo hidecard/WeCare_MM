@@ -17,18 +17,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $adminPassword = env('WECARE_ADMIN_PASSWORD');
-
-        if (app()->environment('production') && blank($adminPassword)) {
-            throw new \RuntimeException('WECARE_ADMIN_PASSWORD must be set before seeding production.');
+        if (app()->environment('production')) {
+            throw new \RuntimeException('Do not seed production. Run php artisan wecare:bootstrap-admin once instead.');
         }
+        $adminPassword = env('WECARE_ADMIN_PASSWORD', 'password123');
 
         User::query()->updateOrCreate(
-            ['email' => 'admin@wecare.test'],
+            ['email' => env('WECARE_ADMIN_EMAIL', 'admin@wecare.test')],
             [
                 'name' => 'WeCare Admin',
-                'email' => 'admin@wecare.test',
-                'password' => Hash::make($adminPassword ?: 'password123'),
+                'email' => env('WECARE_ADMIN_EMAIL', 'admin@wecare.test'),
+                'password' => Hash::make($adminPassword),
                 'role' => 'admin',
             ],
         );

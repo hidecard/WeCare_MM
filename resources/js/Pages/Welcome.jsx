@@ -5,17 +5,10 @@ import { useState } from 'react';
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
 const numberFormat = new Intl.NumberFormat('en-MM');
 
-const paymentDetails = {
-    KBZPay: { phone: '09 123 456 789', label: 'KBZPay QR' },
-    WavePay: { phone: '09 987 654 321', label: 'WavePay QR' },
-    AYAPay: { phone: '09 555 666 777', label: 'AYA Pay QR' },
-    CBPay: { phone: '09 333 444 555', label: 'CB Pay QR' },
-};
-
-export default function Welcome({ impact = {}, fundPools = [], recentDonations = [], recentTrips = [], financialSummary = {} }) {
+export default function Welcome({ impact = {}, fundPools = [], recentDonations = [], recentTrips = [], financialSummary = {}, paymentDetails = {} }) {
     const [selectedPoolId, setSelectedPoolId] = useState(fundPools[0]?.id ?? 1);
     const [selectedAmount, setSelectedAmount] = useState(10000);
-    const [selectedPayment, setSelectedPayment] = useState('KBZPay');
+    const [selectedPayment, setSelectedPayment] = useState(Object.keys(paymentDetails)[0] ?? '');
     const [copiedNumber, setCopiedNumber] = useState('');
     const [step, setStep] = useState(1);
     const [activeCommunityTab, setActiveCommunityTab] = useState('report');
@@ -82,7 +75,7 @@ export default function Welcome({ impact = {}, fundPools = [], recentDonations =
                 setStep(1);
                 setSelectedPoolId(fundPools[0]?.id ?? 1);
                 setSelectedAmount(10000);
-                setSelectedPayment('KBZPay');
+                setSelectedPayment(Object.keys(paymentDetails)[0] ?? '');
             },
         });
     };
@@ -263,7 +256,8 @@ export default function Welcome({ impact = {}, fundPools = [], recentDonations =
                                             <button key={method} type="button" onClick={() => handlePaymentSelect(method)} className={`flex w-full items-center justify-between rounded-2xl border p-4 text-left ${selectedPayment === method ? 'border-[#F59E0B] bg-amber-50' : 'border-slate-200 bg-slate-50'}`}>
                                                 <div>
                                                     <p className="font-bold text-slate-800">{method}</p>
-                                                    <p className="text-xs text-slate-500">{info.phone}</p>
+                                                    <p className="text-xs text-slate-500">{info.label}</p>
+                                                    {info.qr_url && <img src={info.qr_url} alt={`${method} QR`} className="mt-2 h-20 w-20 rounded-lg bg-white object-contain p-1" />}
                                                 </div>
                                                 <div className="rounded-full bg-white px-3 py-1 text-xs font-bold text-emerald-700">{info.label}</div>
                                             </button>

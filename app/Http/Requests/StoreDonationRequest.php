@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreDonationRequest extends FormRequest
 {
@@ -16,7 +17,10 @@ class StoreDonationRequest extends FormRequest
         return [
             'fund_pool_id' => ['required', 'integer', 'exists:fund_pools,id'],
             'amount' => ['required', 'numeric', 'min:1000'],
-            'payment_method' => ['required', 'in:KBZPay,WavePay,AYAPay,CBPay'],
+            'payment_method' => [
+                'required',
+                Rule::exists('payment_methods', 'name')->where(fn ($query) => $query->where('is_active', true)),
+            ],
             'donor_name' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:255'],
             'is_anonymous' => ['nullable', 'boolean'],

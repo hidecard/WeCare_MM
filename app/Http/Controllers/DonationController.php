@@ -4,14 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreDonationRequest;
 use App\Models\Donation;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class DonationController extends Controller
 {
-    public function store(StoreDonationRequest $request)
+    public function store(StoreDonationRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+
+        if (! empty($validated['phone']) && Donation::query()
+            ->where('phone', $validated['phone'])
+            ->where('amount', $validated['amount'])
+            ->where('payment_method', $validated['payment_method'])
+            ->where('created_at', '>=', now()->subMinutes(10))
+            ->exists()) {
+            return redirect()->back()->withErrors(['donation' => 'A matching donation was submitted recently.']);
+        }
 
         $donorName = ($validated['is_anonymous'] ?? false)
             ? 'Anonymous donor'

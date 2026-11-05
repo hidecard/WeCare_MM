@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { BarChart3, ChevronLeft, ChevronRight, FileText, MapPinned, PencilLine, Plus, ShieldAlert, Trash2, UserRound, Users } from 'lucide-react';
+import { BarChart3, ChevronLeft, ChevronRight, CreditCard, FileText, MapPinned, PencilLine, Plus, ShieldAlert, Trash2, UserRound, Users } from 'lucide-react';
 import { useState } from 'react';
 
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
@@ -67,6 +67,7 @@ export default function Management({ fundPools = [], volunteers = [], stats = {}
         { name: 'Spot Reports', href: route('admin.reports.index'), icon: FileText },
         { name: 'Fund Pools', href: route('admin.fund-pools.index'), icon: BarChart3 },
         { name: 'Volunteers', href: route('admin.volunteers.index'), icon: Users },
+        { name: 'Payment Methods', href: route('admin.payment-methods.index'), icon: CreditCard },
     ];
 
     return (

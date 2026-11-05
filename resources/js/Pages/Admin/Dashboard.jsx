@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { BarChart3, ChevronLeft, ChevronRight, FileText, HeartHandshake, LayoutDashboard, MapPinned, Menu, ShieldAlert, ShieldCheck, Users } from 'lucide-react';
+import { BarChart3, ChevronLeft, ChevronRight, FileText, HeartHandshake, LayoutDashboard, List, MapPinned, Menu, ShieldAlert, ShieldCheck, Users } from 'lucide-react';
 import { useState } from 'react';
 
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
@@ -37,6 +37,7 @@ export default function Dashboard({ pendingDonations = [], spotReports = [], fun
     const navItems = [
         { name: 'Overview', href: route('admin.dashboard'), icon: LayoutDashboard },
         { name: 'Donation Review', href: route('admin.donations.index'), icon: ShieldAlert },
+        { name: 'Donation List', href: route('admin.donations.list'), icon: List },
         { name: 'Trip Tracker', href: route('admin.trips.index'), icon: MapPinned },
         { name: 'Spot Reports', href: route('admin.reports.index'), icon: FileText },
         { name: 'Fund Pools', href: route('admin.fund-pools.index'), icon: BarChart3 },
@@ -159,7 +160,7 @@ export default function Dashboard({ pendingDonations = [], spotReports = [], fun
                                         </div>
 
                                         <div className="space-y-3">
-                                            {[{ name: 'Donation Review', href: route('admin.donations.index'), icon: ShieldAlert, count: pendingDonations.length, accent: 'amber' }, { name: 'Trip Tracker', href: route('admin.trips.index'), icon: MapPinned, count: tripSummary.total_trips ?? 0, accent: 'emerald' }, { name: 'Spot Reports', href: route('admin.reports.index'), icon: FileText, count: spotReports.length, accent: 'sky' }].map(({ name, href, icon: Icon, count, accent }) => (
+                                            {[{ name: 'Donation Review', href: route('admin.donations.index'), icon: ShieldAlert, count: pendingDonations.length, accent: 'amber' }, { name: 'Donation List', href: route('admin.donations.list'), icon: List, count: 'All', accent: 'violet' }, { name: 'Trip Tracker', href: route('admin.trips.index'), icon: MapPinned, count: tripSummary.total_trips ?? 0, accent: 'emerald' }, { name: 'Spot Reports', href: route('admin.reports.index'), icon: FileText, count: spotReports.length, accent: 'sky' }].map(({ name, href, icon: Icon, count, accent }) => (
                                                 <Link key={name} href={href} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-3 transition hover:border-emerald-200 hover:bg-emerald-50/50">
                                                     <div className="flex items-center gap-3">
                                                         <span className={`inline-flex rounded-xl p-2 ${accent === 'amber' ? 'bg-amber-100 text-amber-700' : accent === 'emerald' ? 'bg-emerald-100 text-emerald-700' : 'bg-sky-100 text-sky-700'}`}>

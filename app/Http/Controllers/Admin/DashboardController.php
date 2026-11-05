@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOutreachTripRequest;
+use App\Models\AuditLog;
 use App\Models\Donation;
 use App\Models\FundPool;
 use App\Models\OutreachTrip;
@@ -47,6 +48,34 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function donationListIndex(Request $request)
+    {
+        $query = Donation::query()->with('fundPool')->latest();
+        $query->when($request->filled('status') && $request->input('status') !== 'all', fn ($builder) => $builder->where('status', $request->input('status')));
+        $query->when($request->filled('payment_method') && $request->input('payment_method') !== 'all', fn ($builder) => $builder->where('payment_method', $request->input('payment_method')));
+        $query->when($request->filled('search'), function ($builder) use ($request): void {
+            $search = $request->string('search')->toString();
+            $builder->where(function ($nested) use ($search): void {
+                $nested->where('donor_name', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('certificate_code', 'like', "%{$search}%");
+            });
+        });
+
+        return Inertia::render('Admin/DonationList', [
+            'donations' => $query->paginate(15)->withQueryString(),
+            'filters' => $request->only(['status', 'payment_method', 'search']),
+            'paymentMethods' => Donation::query()->select('payment_method')->distinct()->orderBy('payment_method')->pluck('payment_method'),
+            'summary' => [
+                'total' => Donation::query()->count(),
+                'approved' => Donation::query()->where('status', 'approved')->count(),
+                'pending' => Donation::query()->where('status', 'pending')->count(),
+                'rejected' => Donation::query()->where('status', 'rejected')->count(),
+                'approved_amount' => (float) Donation::query()->where('status', 'approved')->sum('amount'),
+            ],
+        ]);
+    }
+
     public function downloadDonationSlip(Donation $donation)
     {
         abort_unless($donation->slip_image_path && Storage::disk('local')->exists($donation->slip_image_path), 404);
@@ -66,6 +95,32 @@ class DashboardController extends Controller
         return Inertia::render('Admin/Reports', [
             'spotReports' => SpotReport::query()->latest()->paginate(10),
         ]);
+    }
+
+    public function updateSpotReport(Request $request, SpotReport $spotReport)
+    {
+        $data = $request->validate([
+            'status' => ['required', 'in:unread,checked,in_progress,resolved'],
+            'urgency' => ['required', 'in:low,normal,high,urgent'],
+            'assigned_to' => ['nullable', 'string', 'max:255'],
+            'follow_up_note' => ['nullable', 'string', 'max:4000'],
+        ]);
+
+        $spotReport->update([
+            ...$data,
+            'resolved_at' => $data['status'] === 'resolved' ? now() : null,
+        ]);
+
+        AuditLog::query()->create([
+            'actor_id' => auth()->id(),
+            'action' => 'spot_report.workflow_updated',
+            'auditable_type' => SpotReport::class,
+            'auditable_id' => $spotReport->id,
+            'metadata' => $data,
+            'ip_address' => request()->ip(),
+        ]);
+
+        return redirect()->back()->with('success', 'Spot report workflow updated successfully.');
     }
 
     public function managementIndex()
@@ -119,6 +174,14 @@ class DashboardController extends Controller
             'is_active' => $data['is_active'] ?? true,
         ]);
 
+        AuditLog::query()->create([
+            'actor_id' => auth()->id(),
+            'action' => 'fund_pool.created',
+            'auditable_type' => FundPool::class,
+            'metadata' => $data,
+            'ip_address' => request()->ip(),
+        ]);
+
         return redirect()->back()->with('success', 'Fund pool created successfully.');
     }
 
@@ -140,12 +203,29 @@ class DashboardController extends Controller
             'is_active' => $data['is_active'] ?? $fundPool->is_active,
         ]);
 
+        AuditLog::query()->create([
+            'actor_id' => auth()->id(),
+            'action' => 'fund_pool.updated',
+            'auditable_type' => FundPool::class,
+            'auditable_id' => $fundPool->id,
+            'metadata' => $data,
+            'ip_address' => request()->ip(),
+        ]);
+
         return redirect()->back()->with('success', 'Fund pool updated successfully.');
     }
 
     public function destroyFundPool(FundPool $fundPool)
     {
         $fundPool->delete();
+
+        AuditLog::query()->create([
+            'actor_id' => auth()->id(),
+            'action' => 'fund_pool.deleted',
+            'auditable_type' => FundPool::class,
+            'auditable_id' => $fundPool->id,
+            'ip_address' => request()->ip(),
+        ]);
 
         return redirect()->back()->with('success', 'Fund pool removed successfully.');
     }
@@ -221,6 +301,15 @@ class DashboardController extends Controller
         if (! $updated) {
             return redirect()->back()->withErrors(['status' => 'This donation has already been reviewed.']);
         }
+
+        AuditLog::query()->create([
+            'actor_id' => auth()->id(),
+            'action' => 'donation.status_updated',
+            'auditable_type' => Donation::class,
+            'auditable_id' => $donation->id,
+            'metadata' => ['status' => $status],
+            'ip_address' => request()->ip(),
+        ]);
 
         return redirect()->back()->with('success', 'Donation status updated successfully.');
     }

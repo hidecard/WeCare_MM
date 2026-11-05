@@ -11,23 +11,27 @@
 - [x] Store donation slips privately and protect admin slip/certificate downloads.
 - [x] Add a safe Hostinger SSH deployment workflow that preserves `.env` and `storage/`.
 - [x] Mirror only Laravel `public/` assets into a fixed Hostinger `public_html` root when needed.
+- [x] Add admin-managed payment methods with account details, active status, ordering, and QR uploads.
+- [x] Add a one-time production admin bootstrap command and document the production credential flow.
+- [x] Rewrite README with project setup, deployment, storage, payment, and admin bootstrap instructions.
+- [x] Add spot-report status, urgency, assignment, follow-up notes, and resolved timestamps.
+- [x] Add public-form rate limits and recent duplicate-submit protection.
+- [x] Add audit logs for donation reviews, spot-report workflow changes, and fund-pool changes.
 
 ## P0 — Before production
 
 - [ ] Add action-level policies for individual admin resources.
-- [ ] Replace local/testing fallback credentials with a one-time production bootstrap command.
-- [ ] Replace hardcoded/demo payment accounts and fake QR visuals with verified configurable payment data.
+- [ ] Run the production admin bootstrap command on Hostinger with the real admin email and password.
+- [ ] Add verified organization payment accounts and QR images through Admin → Payment Methods before launch.
 
 ## P1 — Core operations
 
-- [ ] Add spot-report status update, assignment, follow-up notes, and urgency workflow.
-- [ ] Add audit logs for donation review, fund changes, expenses, and destructive actions.
+- [ ] Extend audit logs to expenses and other destructive actions.
 - [ ] Replace fund-pool deletion with archive/deactivate behavior; preserve financial history.
 - [ ] Add an expense ledger with categories, receipts, reporting period, and reviewer.
 - [ ] Add rate limiting, duplicate-submit protection, and abuse controls to public forms.
 - [ ] Add feature tests for donations, uploads, admin authorization, reports, volunteers, and migrations.
 - [ ] Add notification jobs for donation review results and field-team updates.
-- [ ] Rewrite README with project setup, deployment, storage, payment, and admin bootstrap instructions.
 - [ ] Run the first Hostinger deployment and verify document root, database, uploads, and rollback procedure.
 
 ## P2 — UX and growth
