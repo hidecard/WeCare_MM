@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'WeCare Admin',
                 'email' => env('WECARE_ADMIN_EMAIL', 'admin@wecare.test'),
+                'email_verified_at' => now(),
                 'password' => Hash::make($adminPassword),
                 'role' => 'admin',
             ],

@@ -162,6 +162,9 @@ jobs:
           "$PHP_BIN" artisan storage:link || test -L public/storage
           "$PHP_BIN" artisan optimize:clear
 
+          # Create the configured administrator only when missing; preserve existing passwords.
+          "$PHP_BIN" artisan wecare:bootstrap-admin --ensure
+
           # Hostinger commonly keeps the domain document root at public_html.
           # Keep the complete Laravel application in APP_PATH and mirror only
           # public web assets into public_html. Never copy .env, app/, vendor/,

@@ -125,7 +125,7 @@ WECARE_ADMIN_PASSWORD=use-a-long-random-secret
 WECARE_ADMIN_EMAIL=admin@example.org
 ```
 
-For production, set `APP_DEBUG=false`, use a real `APP_KEY`, configure the production database, set a real mail provider, and keep payment account values only in the server environment. Do not seed production or use the local fallback credentials. After migrations, create the administrator once with:
+For production, set `APP_ENV=production`, `APP_DEBUG=false`, use a real `APP_KEY`, configure the production database, set a real mail provider, and keep payment account values only in the server environment. Do not seed production or use local fallback credentials. The deploy workflow runs the forward migrations and then safely ensures the configured administrator using `WECARE_ADMIN_EMAIL` and `WECARE_ADMIN_PASSWORD` from the server `.env`: it creates the account only if missing, and otherwise ensures the admin role/email verification without changing an existing password. To create or rotate the password manually, run:
 
 ```bash
 php artisan wecare:bootstrap-admin --email=admin@example.org
@@ -170,10 +170,12 @@ Admin routes are protected by both authentication and the `admin` middleware. A 
 
 The local seed creates:
 
-- `admin@wecare.test` with `role=admin` and the local fallback password `password123`.
+- An administrator with `role=admin`; the login email and password are the values of `WECARE_ADMIN_EMAIL` and `WECARE_ADMIN_PASSWORD` in `.env`.
 - `test@example.com` with `role=user` and the local test password `password123`.
 
-These credentials are intended only for local/test environments. Set `WECARE_ADMIN_PASSWORD` before any production seed operation, and replace the default admin account or password immediately in a real deployment.
+After copying `.env.example`, the configured local admin credentials are `admin@example.org` and `use-a-long-random-secret`. The seeder's fallback values (`admin@wecare.test` and `password123`) are used only when those environment variables are not set. These local/example credentials must not be used in production.
+
+Production deployments intentionally do not run the seeder. The deploy workflow runs `php artisan wecare:bootstrap-admin --ensure` after migrations. This only creates a missing account using `WECARE_ADMIN_EMAIL` and `WECARE_ADMIN_PASSWORD`; existing account passwords are preserved. To reset an existing administrator password, run `php artisan wecare:bootstrap-admin --email=admin@example.org` on the server and enter a password of at least 12 characters when prompted. The command verifies the provisioned admin account so it can reach the verified dashboard.
 
 ## Donation flow and safety notes
 
