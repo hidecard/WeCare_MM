@@ -32,15 +32,15 @@ jobs:
           node-version: '20'
           cache: npm
 
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --optimize-autoloader
+
       - name: Prepare application environment
         run: |
           cp .env.example .env
           touch database/database.sqlite
           php artisan key:generate --force
           php artisan storage:link
-
-      - name: Install PHP dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress --optimize-autoloader
 
       - name: Install JavaScript dependencies
         run: npm ci --ignore-scripts
