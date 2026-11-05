@@ -204,7 +204,7 @@ The deployment workflow requires these repository secrets: `HOSTINGER_SSH_HOST`,
 
 ## Hostinger deployment notes
 
-A Hostinger deployment must preserve server-managed files. The deployment process should update application code without deleting `.env`, `vendor`, `storage/app/public`, uploaded images, or other persistent directories. After code upload, run the normal forward migration command:
+A Hostinger deployment must use PHP 8.4.1 or newer because the locked Laravel/Symfony dependencies require it. The SSH workflow detects common Hostinger PHP 8.4 CLI names (`php8.4`, `php84`, and `ea-php84`) and stops safely with an instruction if only PHP 8.3 is available. The deployment process should update application code without deleting `.env`, `vendor`, `storage/app/public`, uploaded images, or other persistent directories. After code upload, run the normal forward migration command:
 
 ```bash
 php artisan migrate --force
