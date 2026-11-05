@@ -20,4 +20,3 @@ class AuditLog extends Model
         return ['metadata' => 'array'];
     }
 }
-***

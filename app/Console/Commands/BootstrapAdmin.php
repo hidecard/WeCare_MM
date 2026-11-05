@@ -38,4 +38,3 @@ class BootstrapAdmin extends Command
         return self::SUCCESS;
     }
 }
-***

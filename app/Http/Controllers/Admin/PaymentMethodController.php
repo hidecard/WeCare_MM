@@ -76,4 +76,3 @@ class PaymentMethodController extends Controller
         return $request->file('qr_image')?->store('payment-qr', 'public');
     }
 }
-***
