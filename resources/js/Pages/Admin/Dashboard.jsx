@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { BarChart3, ChevronLeft, ChevronRight, FileText, HeartHandshake, LayoutDashboard, List, MapPinned, Menu, ShieldAlert, ShieldCheck, Users } from 'lucide-react';
+import { BarChart3, ChevronLeft, ChevronRight, CreditCard, FileText, HeartHandshake, LayoutDashboard, List, MapPinned, Menu, ShieldAlert, ShieldCheck, Users } from 'lucide-react';
 import { useState } from 'react';
 
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
@@ -42,6 +42,7 @@ export default function Dashboard({ pendingDonations = [], spotReports = [], fun
         { name: 'Spot Reports', href: route('admin.reports.index'), icon: FileText },
         { name: 'Fund Pools', href: route('admin.fund-pools.index'), icon: BarChart3 },
         { name: 'Volunteers', href: route('admin.volunteers.index'), icon: Users },
+        { name: 'Payment Methods', href: route('admin.payment-methods.index'), icon: CreditCard },
     ];
 
     const metricCards = [
