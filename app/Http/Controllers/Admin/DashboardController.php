@@ -47,6 +47,13 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function downloadDonationSlip(Donation $donation)
+    {
+        abort_unless($donation->slip_image_path && Storage::disk('local')->exists($donation->slip_image_path), 404);
+
+        return Storage::disk('local')->download($donation->slip_image_path);
+    }
+
     public function tripsIndex()
     {
         return Inertia::render('Admin/Trips', [

@@ -15,7 +15,7 @@ Route::get('/community', [HomeController::class, 'community'])->name('community'
 Route::middleware(['auth', 'verified'])->get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 Route::post('/donations', [DonationController::class, 'store'])->name('donations.store');
-Route::get('/donations/{donation}/certificate', [DonationController::class, 'downloadCertificate'])->name('donations.certificate');
+Route::get('/donations/{donation}/certificate/{certificateCode}', [DonationController::class, 'downloadCertificate'])->name('donations.certificate');
 Route::post('/spot-reports', [SpotReportController::class, 'store'])->name('spot-reports.store');
 Route::post('/volunteers', [VolunteerController::class, 'store'])->name('volunteers.store');
 
@@ -31,6 +31,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/fund-pools', [DashboardController::class, 'fundPoolsIndex'])->name('admin.fund-pools.index');
     Route::get('/admin/volunteers', [DashboardController::class, 'volunteersIndex'])->name('admin.volunteers.index');
     Route::get('/admin/donations', [DashboardController::class, 'donationsIndex'])->name('admin.donations.index');
+    Route::get('/admin/donations/{donation}/slip', [DashboardController::class, 'downloadDonationSlip'])->name('admin.donations.slip');
     Route::get('/admin/trips', [DashboardController::class, 'tripsIndex'])->name('admin.trips.index');
     Route::get('/admin/reports', [DashboardController::class, 'spotReportsIndex'])->name('admin.reports.index');
     Route::patch('/admin/donations/{donation}/status', [DashboardController::class, 'updateDonationStatus'])->name('admin.donations.update-status');

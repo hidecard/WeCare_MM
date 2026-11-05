@@ -160,7 +160,7 @@ export default function Donations({ pendingDonations = [] }) {
                                                             <td className="px-4 py-3">{donation.payment_method}</td>
                                                             <td className="px-4 py-3">
                                                                 {donation.slip_image_path ? (
-                                                                    <a href={`/storage/${donation.slip_image_path}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
+                                                                    <a href={route('admin.donations.slip', donation.id)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
                                                                         <FileImage className="h-4 w-4" />
                                                                         View slip
                                                                     </a>

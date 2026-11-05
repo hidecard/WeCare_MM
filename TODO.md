@@ -8,14 +8,13 @@
 - [x] Add explicit user roles and protect admin routes with admin middleware.
 - [x] Make donation approval transactional and reject repeat reviews.
 - [x] Wire Community and Home report/volunteer forms to backend endpoints.
+- [x] Store donation slips privately and protect admin slip/certificate downloads.
 
 ## P0 — Before production
 
 - [ ] Add action-level policies for individual admin resources.
 - [ ] Replace local/testing fallback credentials with a one-time production bootstrap command.
 - [ ] Replace hardcoded/demo payment accounts and fake QR visuals with verified configurable payment data.
-- [ ] Move donation slips and receipts to private storage with authorized/signed downloads.
-- [ ] Protect certificate downloads with donor authorization or signed tokens.
 
 ## P1 — Core operations
 

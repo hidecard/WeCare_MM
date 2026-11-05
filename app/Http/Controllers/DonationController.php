@@ -18,9 +18,7 @@ class DonationController extends Controller
             : (trim((string) ($validated['donor_name'] ?? '')) ?: 'Anonymous donor');
 
         $file = $request->file('slip_image');
-        $path = $file ? Storage::disk('public')->putFileAs('slips', $file, $this->makeUniqueFilename($file)) : null;
-
-        $certificateCode = $this->generateCertificateCode();
+        $path = $file ? Storage::disk('local')->putFileAs('slips', $file, $this->makeUniqueFilename($file)) : null;
 
         Donation::query()->create([
             'fund_pool_id' => $validated['fund_pool_id'],
@@ -32,15 +30,15 @@ class DonationController extends Controller
             'slip_image_path' => $path,
             'wish_note' => $validated['wish_note'] ?? null,
             'status' => 'pending',
-            'certificate_code' => $certificateCode,
+            'certificate_code' => null,
         ]);
 
         return redirect()->back()->with('success', 'Thank you. Your donation has been received and is being reviewed by our outreach team.');
     }
 
-    public function downloadCertificate(Donation $donation)
+    public function downloadCertificate(Donation $donation, string $certificateCode)
     {
-        if ($donation->status !== 'approved' || empty($donation->certificate_code)) {
+        if ($donation->status !== 'approved' || empty($donation->certificate_code) || ! hash_equals($donation->certificate_code, $certificateCode)) {
             abort(404, 'Certificate not available yet.');
         }
 
