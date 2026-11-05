@@ -1,58 +1,229 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# WeCare Myanmar
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+WeCare Myanmar is a community-powered street outreach platform for supporting vulnerable elderly people in Myanmar. The project connects donors, field volunteers, and the outreach team in one place so that people can report someone who needs help, contribute through local mobile-payment channels, join volunteer work, and see how outreach funds are being used.
 
-## About Laravel
+> **Project status:** Early-stage MVP. The core public flows and admin operations are implemented, but the production checklist in [`TODO.md`](TODO.md) must be completed before handling real donations at scale.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+[![CI](https://github.com/hidecard/WeCare_MM/actions/workflows/ci.yml/badge.svg)](https://github.com/hidecard/WeCare_MM/actions/workflows/ci.yml)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## ရည်ရွယ်ချက်
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+WeCare Myanmar ရဲ့ ရည်ရွယ်ချက်က လမ်းဘေးမှာ အကူအညီလိုအပ်နေတဲ့ အသက်ကြီးသူများအတွက် အစားအစာ၊ ဆေးဝါးနဲ့ အခြေခံစောင့်ရှောက်မှုတွေကို လူမှုအသိုက်အဝန်းနဲ့ ပူးပေါင်းပြီး ပိုမိုစနစ်တကျ ပေးနိုင်ဖို့ ဖြစ်ပါတယ်။ Donor တွေက လှူဒါန်းနိုင်ပြီး၊ ပြည်သူတွေက အကူအညီလိုအပ်သူတွေကို သတင်းပေးနိုင်ပါတယ်။ Volunteer တွေက field outreach အဖွဲ့နဲ့ ဆက်သွယ်ပြီး ပါဝင်နိုင်ပါတယ်။
 
-## Learning Laravel
+## What the project does
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+The public website provides a bilingual Burmese/English experience with the following flows:
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Donation:** Select a fund pool, choose an amount, select a local payment method, upload a payment slip, and submit the donation for manual review.
+- **Community spot report:** Send a township, landmark, time, condition description, and optional phone number to the outreach team.
+- **Volunteer registration:** Submit contact and availability information to join the field team.
+- **Impact:** View high-level outreach totals including elders helped, meals distributed, medical aid, townships reached, received funds, and spent funds.
+- **Outreach activity:** View published outreach trips, photos, service counts, and summaries.
+- **Donation certificate:** Approved donations can receive a certificate download link protected by the donation certificate code.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+The private admin area provides donation review, fund-pool management, volunteer management, outreach-trip management, spot-report review, uploaded slip access, and operational summary cards.
 
-## Agentic Development
+## Technology stack
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+- PHP 8.4 runtime in CI; the application requires PHP `^8.3` or a compatible newer version.
+- Laravel 13.
+- Inertia.js 2 with React 18.
+- Vite 8 and Tailwind CSS.
+- SQLite for local development by default; MySQL/MariaDB can be configured for production.
+- Pest for application tests.
+- GitHub Actions for migration, test, and frontend-build checks.
 
-```bash
-composer require laravel/boost --dev
+## Project structure
 
-php artisan boost:install
+```text
+app/
+  Http/Controllers/        Public, auth, and admin controllers
+  Http/Middleware/         Inertia and admin authorization middleware
+  Http/Requests/            Validation rules for public forms and uploads
+  Models/                   Donation, fund pool, trip, report, volunteer, user
+database/
+  migrations/               Users, outreach, donation, and role schema
+  seeders/                  Local/test seed data
+resources/js/
+  Components/               Shared React UI components and public layout
+  Pages/                    Public, auth, profile, and admin pages
+routes/
+  web.php                   Public and admin web routes
+  auth.php                  Authentication routes
+.github/workflows/ci.yml    GitHub Actions CI workflow
+TODO.md                     Remaining production work
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Requirements
+
+Install the following before starting local development:
+
+- PHP 8.3+; PHP 8.4 is recommended to match the locked dependency set.
+- Composer 2.
+- Node.js 20+ and npm.
+- SQLite with the PHP `pdo_sqlite` extension, or a configured MySQL/MariaDB database.
+
+## Local installation
+
+Clone the repository and install the application dependencies:
+
+```bash
+git clone https://github.com/hidecard/WeCare_MM.git
+cd WeCare_MM
+composer install
+npm ci
+```
+
+Create the local environment and application key:
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+For the default SQLite setup, create the database file and run migrations with local seed data:
+
+```bash
+touch database/database.sqlite
+php artisan migrate --seed
+php artisan storage:link
+```
+
+Build the frontend assets or start the Vite development server:
+
+```bash
+npm run build
+# or, during development:
+npm run dev
+```
+
+In another terminal, start Laravel:
+
+```bash
+php artisan serve
+```
+
+Open `http://localhost:8000` in a browser.
+
+## Environment configuration
+
+The committed `.env.example` is only a template. Never commit a real `.env` file. Important settings include:
+
+```dotenv
+APP_NAME="WeCare Myanmar"
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+
+DB_CONNECTION=sqlite
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+
+# Required when running DatabaseSeeder in production
+WECARE_ADMIN_PASSWORD=use-a-long-random-secret
+```
+
+For production, set `APP_DEBUG=false`, use a real `APP_KEY`, configure the production database, set a real mail provider, and provide a strong `WECARE_ADMIN_PASSWORD` only through the server environment or secret manager. Do not use the local fallback credentials in production.
+
+## Database and migrations
+
+The normal development commands are:
+
+```bash
+php artisan migrate
+php artisan db:seed
+```
+
+To rebuild a disposable local database:
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+The migrations include users, cache/jobs/session support, fund pools, donations, outreach trips, spot reports, volunteers, and the user role used by admin authorization. Existing production databases should not use `migrate:fresh`; run normal forward migrations and take a backup first.
+
+## Storage and uploaded files
+
+The default local disk stores private donation slips under `storage/app/private`. Admin users access slips through an authorized download route; slips should not be exposed through `/public/storage`.
+
+Outreach photos and receipt images currently use the public disk for the public outreach gallery. Before production, review the privacy and consent requirements for every uploaded image. Do not manually delete persistent storage folders during deployment.
+
+For local development, create the standard public storage link when needed:
+
+```bash
+php artisan storage:link
+```
+
+The repository ignores `.env`, `vendor`, `node_modules`, build output, and uploaded storage paths. These files should remain on the server or be created during deployment; they should not be committed into Git.
+
+## Admin access
+
+Admin routes are protected by both authentication and the `admin` middleware. A user must have `role=admin` in the database to access `/admin/*`.
+
+The local seed creates:
+
+- `admin@wecare.test` with `role=admin` and the local fallback password `password123`.
+- `test@example.com` with `role=user` and the local test password `password123`.
+
+These credentials are intended only for local/test environments. Set `WECARE_ADMIN_PASSWORD` before any production seed operation, and replace the default admin account or password immediately in a real deployment.
+
+## Donation flow and safety notes
+
+The current payment workflow is manual-transfer based. A donor chooses a payment method, completes the transfer outside the application, uploads a slip, and waits for an admin reviewer to approve or reject the donation. Approval is transactional and protected against repeat review double-counting.
+
+Before real public fundraising, replace the demo payment details and placeholder QR visuals with verified organization-owned accounts and real QR assets. Add payment reference numbers, duplicate-slip detection, reviewer notes, donor notifications, and a proper financial ledger. These items are tracked in [`TODO.md`](TODO.md).
+
+## Testing and CI
+
+Run the frontend build locally:
+
+```bash
+npm run build
+```
+
+Run the Laravel test suite when PHP and Composer dependencies are installed:
+
+```bash
+php artisan test --compact
+```
+
+GitHub Actions runs on pushes and pull requests targeting `main`. The workflow currently:
+
+1. Sets up PHP 8.4 and Node.js 20.
+2. Installs Composer and npm dependencies.
+3. Creates a test environment and SQLite database.
+4. Runs `migrate:fresh --seed` to catch migration/seed failures.
+5. Runs Pest tests.
+6. Builds Vite assets.
+
+## Hostinger deployment notes
+
+A Hostinger deployment must preserve server-managed files. The deployment process should update application code without deleting `.env`, `vendor`, `storage/app/public`, uploaded images, or other persistent directories. After code upload, run the normal forward migration command:
+
+```bash
+php artisan migrate --force
+php artisan optimize:clear
+php artisan storage:link
+```
+
+Do not run `migrate:fresh` on Hostinger production. Keep database credentials and `WECARE_ADMIN_PASSWORD` in Hostinger environment configuration, not in GitHub. A future deployment workflow should use protected GitHub Secrets and a server-side deploy script with an explicit allowlist of files to update.
+
+## Security checklist before launch
+
+- Configure a real admin role and verify that ordinary users receive `403` for admin routes.
+- Replace all demo payment numbers and QR visuals.
+- Keep donation slips private and verify signed/authorized downloads.
+- Add rate limits and duplicate submission protection to public forms.
+- Add audit history for donation approvals, financial changes, and destructive actions.
+- Add backup and restore verification before accepting real donations.
+- Review beneficiary photo consent, privacy policy, and personal-data retention.
+- Run the full CI workflow successfully on the target branch.
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Create a focused branch, make one logical change at a time, run the relevant tests/build, update [`TODO.md`](TODO.md) when a production item is completed, and open a pull request with a short description of the user and operational impact.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+The intended project license is MIT. Add and commit a `LICENSE` file before making a formal public release.
