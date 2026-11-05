@@ -24,6 +24,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout deploy revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Build frontend assets on GitHub runner
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build frontend assets
+        run: npm run build
+
       - name: Configure SSH
         env:
           HOSTINGER_SSH_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
@@ -34,6 +51,19 @@ jobs:
           printf '%s\n' "$HOSTINGER_SSH_KEY" > "$HOME/.ssh/hostinger_deploy"
           chmod 600 "$HOME/.ssh/hostinger_deploy"
           ssh-keyscan -p "${{ secrets.HOSTINGER_SSH_PORT }}" -H "$HOSTINGER_SSH_HOST" >> "$HOME/.ssh/known_hosts"
+
+      - name: Upload built frontend assets
+        env:
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: |
+          set -euo pipefail
+          BUILD_ARCHIVE="/tmp/wecare-build-${DEPLOY_SHA}.tar.gz"
+          tar -C public -czf - build | ssh -i "$HOME/.ssh/hostinger_deploy" \
+            -p "$SSH_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" "cat > '$BUILD_ARCHIVE'"
 
       - name: Deploy over SSH
         env:
@@ -50,12 +80,13 @@ jobs:
             -o BatchMode=yes \
             -o StrictHostKeyChecking=yes \
             "$SSH_USER@$SSH_HOST" \
-            "bash -s -- $(printf '%q' "$APP_PATH") $(printf '%q' "$DEPLOY_SHA") $(printf '%q' "$PUBLIC_PATH")" <<'REMOTE_SCRIPT'
+            "bash -s -- $(printf '%q' "$APP_PATH") $(printf '%q' "$DEPLOY_SHA") $(printf '%q' "$PUBLIC_PATH") $(printf '%q' "/tmp/wecare-build-$DEPLOY_SHA.tar.gz")" <<'REMOTE_SCRIPT'
           set -Eeuo pipefail
 
           APP_PATH="$1"
           DEPLOY_SHA="$2"
           PUBLIC_PATH="${3:-}"
+          BUILD_ARCHIVE="${4:-}"
           REPOSITORY="https://github.com/hidecard/WeCare_MM.git"
 
           if [ -z "$APP_PATH" ] || [ "$APP_PATH" = "/" ]; then
@@ -78,6 +109,11 @@ jobs:
           else
               echo "Refusing to deploy into a non-empty directory without a Git checkout: $APP_PATH"
               exit 1
+          fi
+
+          if [ -n "$BUILD_ARCHIVE" ] && [ -f "$BUILD_ARCHIVE" ]; then
+              tar -xzf "$BUILD_ARCHIVE" -C public
+              rm -f "$BUILD_ARCHIVE"
           fi
 
           if [ ! -f .env ]; then
@@ -114,8 +150,12 @@ jobs:
           if command -v npm >/dev/null; then
               npm ci --ignore-scripts
               npm run build
-          else
-              echo "npm is not available on the Hostinger account; public/build must already be present."
+          fi
+
+          if [ ! -f public/build/manifest.json ]; then
+              echo "Frontend build manifest is missing at $APP_PATH/public/build/manifest.json"
+              echo "The deployment cannot serve Laravel Vite assets."
+              exit 1
           fi
 
           "$PHP_BIN" artisan migrate --force
