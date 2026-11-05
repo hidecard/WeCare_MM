@@ -161,6 +161,22 @@ export default function Home({ impact = {}, fundPools = [], recentDonations = []
         });
     };
 
+    const handleReportSubmit = (event) => {
+        event.preventDefault();
+        reportForm.post(route('spot-reports.store'), {
+            preserveScroll: true,
+            onSuccess: () => reportForm.reset(),
+        });
+    };
+
+    const handleVolunteerSubmit = (event) => {
+        event.preventDefault();
+        volunteerForm.post(route('volunteers.store'), {
+            preserveScroll: true,
+            onSuccess: () => volunteerForm.reset('name', 'phone', 'township'),
+        });
+    };
+
     const impactMessage = `${currency.format(Number(selectedAmount) || 0)} = ${(selectedPool.title_en || 'General outreach')} support for around ${estimatedPeople} elderly people today.`;
 
     return (
@@ -525,21 +541,21 @@ export default function Home({ impact = {}, fundPools = [], recentDonations = []
                                 </div>
 
                                 {activeCommunityTab === 'report' ? (
-                                    <form className="mt-5 space-y-3">
-                                        <input value={reportForm.data.township} onChange={(e) => reportForm.setData('township', e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" placeholder={lang === 'my' ? 'မြို့နယ်' : 'Township'} />
-                                        <input value={reportForm.data.street_landmark} onChange={(e) => reportForm.setData('street_landmark', e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" placeholder={lang === 'my' ? 'လမ်းဘေးအမှတ်တံဆိပ်' : 'Street landmark'} />
-                                        <input value={reportForm.data.time_seen} onChange={(e) => reportForm.setData('time_seen', e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" placeholder={lang === 'my' ? 'တွေ့ရှိချိန်' : 'Time seen'} />
-                                        <textarea value={reportForm.data.condition_note} onChange={(e) => reportForm.setData('condition_note', e.target.value)} rows="3" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" placeholder={lang === 'my' ? 'အခြေအနေဖော်ပြချက်' : 'Condition note'} />
-                                        <input value={reportForm.data.reporter_phone} onChange={(e) => reportForm.setData('reporter_phone', e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" placeholder={lang === 'my' ? 'ဖုန်းနံပါတ်' : 'Phone'} />
-                                        <button type="button" className="w-full rounded-full bg-[#065F46] px-4 py-3 font-semibold text-white">{lang === 'my' ? 'တင်သွင်းရန်' : 'Submit report'}</button>
+                                    <form className="mt-5 space-y-3" onSubmit={handleReportSubmit}>
+                                        <input required value={reportForm.data.township} onChange={(e) => reportForm.setData('township', e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" placeholder={lang === 'my' ? 'မြို့နယ်' : 'Township'} />
+                                        <input required value={reportForm.data.street_landmark} onChange={(e) => reportForm.setData('street_landmark', e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" placeholder={lang === 'my' ? 'လမ်းဘေးအမှတ်တံဆိပ်' : 'Street landmark'} />
+                                        <input required type="datetime-local" value={reportForm.data.time_seen} onChange={(e) => reportForm.setData('time_seen', e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" />
+                                        <textarea required value={reportForm.data.condition_note} onChange={(e) => reportForm.setData('condition_note', e.target.value)} rows="3" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" placeholder={lang === 'my' ? 'အခြေအနေဖော်ပြချက်' : 'Condition note'} />
+                                        <input type="tel" value={reportForm.data.reporter_phone} onChange={(e) => reportForm.setData('reporter_phone', e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" placeholder={lang === 'my' ? 'ဖုန်းနံပါတ် (ရွေးချယ်နိုင်သည်)' : 'Phone (optional)'} />
+                                        <button type="submit" disabled={reportForm.processing} className="w-full rounded-full bg-[#065F46] px-4 py-3 font-semibold text-white disabled:opacity-60">{reportForm.processing ? (lang === 'my' ? 'ပေးပို့နေသည်...' : 'Sending...') : (lang === 'my' ? 'တင်သွင်းရန်' : 'Submit report')}</button>
                                     </form>
                                 ) : (
-                                    <form className="mt-5 space-y-3">
-                                        <input value={volunteerForm.data.name} onChange={(e) => volunteerForm.setData('name', e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" placeholder={lang === 'my' ? 'အမည်' : 'Name'} />
-                                        <input value={volunteerForm.data.phone} onChange={(e) => volunteerForm.setData('phone', e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" placeholder={lang === 'my' ? 'ဖုန်းနံပါတ်' : 'Phone'} />
-                                        <input value={volunteerForm.data.township} onChange={(e) => volunteerForm.setData('township', e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" placeholder={lang === 'my' ? 'မြို့နယ်' : 'Township'} />
-                                        <input value={volunteerForm.data.available_days} onChange={(e) => volunteerForm.setData('available_days', e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" placeholder={lang === 'my' ? 'အလုပ်ပေးနိုင်သောရက်' : 'Available days'} />
-                                        <button type="button" className="w-full rounded-full bg-[#F59E0B] px-4 py-3 font-semibold text-[#065F46]">{lang === 'my' ? 'စေတနာ့ဝန်ထမ်းအဖြစ် တက်ရောက်မည်' : 'Volunteer with us'}</button>
+                                    <form className="mt-5 space-y-3" onSubmit={handleVolunteerSubmit}>
+                                        <input required value={volunteerForm.data.name} onChange={(e) => volunteerForm.setData('name', e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" placeholder={lang === 'my' ? 'အမည်' : 'Name'} />
+                                        <input required type="tel" value={volunteerForm.data.phone} onChange={(e) => volunteerForm.setData('phone', e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" placeholder={lang === 'my' ? 'ဖုန်းနံပါတ်' : 'Phone'} />
+                                        <input required value={volunteerForm.data.township} onChange={(e) => volunteerForm.setData('township', e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" placeholder={lang === 'my' ? 'မြို့နယ်' : 'Township'} />
+                                        <input required value={volunteerForm.data.available_days} onChange={(e) => volunteerForm.setData('available_days', e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2" placeholder={lang === 'my' ? 'အလုပ်ပေးနိုင်သောရက်' : 'Available days'} />
+                                        <button type="submit" disabled={volunteerForm.processing} className="w-full rounded-full bg-[#F59E0B] px-4 py-3 font-semibold text-[#065F46] disabled:opacity-60">{volunteerForm.processing ? (lang === 'my' ? 'ပေးပို့နေသည်...' : 'Sending...') : (lang === 'my' ? 'စေတနာ့ဝန်ထမ်းအဖြစ် တက်ရောက်မည်' : 'Volunteer with us')}</button>
                                     </form>
                                 )}
                             </div>
