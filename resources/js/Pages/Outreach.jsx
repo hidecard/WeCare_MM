@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, MapPinned, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import PublicLayout from '../Components/PublicLayout';
+import useLanguage from '../hooks/useLanguage';
 
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
 const fallbackTripPhotos = [
@@ -49,7 +50,7 @@ const renderPagination = (pageCount, currentPage, onPageChange) => {
 };
 
 export default function Outreach({ recentTrips = [] }) {
-    const [lang, setLang] = useState('my');
+    const [lang, setLang] = useLanguage();
     const [tripPage, setTripPage] = useState(1);
     const tripPageSize = 6;
     const tripPageCount = Math.max(1, Math.ceil((recentTrips?.length ?? 0) / tripPageSize));

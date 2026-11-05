@@ -2,6 +2,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { ArrowRight, BadgeCheck, Building2, HandCoins, HeartHandshake, MapPinned, Phone, Soup, Stethoscope, Users, WalletCards, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import PublicLayout from '../Components/PublicLayout';
+import useLanguage from '../hooks/useLanguage';
 
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
 const numberFormat = new Intl.NumberFormat('en-MM');
@@ -46,7 +47,7 @@ const renderTripPagination = (pageCount, currentPage, onPageChange) => {
 
 export default function Home({ impact = {}, fundPools = [], recentDonations = [], recentTrips = [], financialSummary = {}, paymentDetails = {} }) {
     const { flash = {} } = usePage().props;
-    const [lang, setLang] = useState('my');
+    const [lang, setLang] = useLanguage();
     const [selectedPoolId, setSelectedPoolId] = useState(fundPools[0]?.id ?? 1);
     const [selectedAmount, setSelectedAmount] = useState(10000);
     const [selectedPayment, setSelectedPayment] = useState(Object.keys(paymentDetails)[0] ?? '');

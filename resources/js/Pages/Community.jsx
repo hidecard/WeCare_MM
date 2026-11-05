@@ -2,11 +2,12 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { ArrowLeft, HeartHandshake, ShieldCheck, Users } from 'lucide-react';
 import { useState } from 'react';
 import PublicLayout from '../Components/PublicLayout';
+import useLanguage from '../hooks/useLanguage';
 
 const FieldError = ({ message }) => message ? <p className="mt-1 text-xs font-medium text-red-600">{message}</p> : null;
 
 export default function Community() {
-    const [lang, setLang] = useState('my');
+    const [lang, setLang] = useLanguage();
     const [tab, setTab] = useState('report');
     const { flash = {} } = usePage().props;
     const reportForm = useForm({ township: '', street_landmark: '', time_seen: '', condition_note: '', reporter_phone: '' });

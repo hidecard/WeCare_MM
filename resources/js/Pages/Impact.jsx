@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, MapPinned, Soup, Stethoscope, Users } from 'lucide-react';
-import { useState } from 'react';
 import PublicLayout from '../Components/PublicLayout';
+import useLanguage from '../hooks/useLanguage';
 
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
 
@@ -23,7 +23,7 @@ const formatDisplayDate = (value) => {
 };
 
 export default function Impact({ impact = {}, financialSummary = {}, recentTrips = [] }) {
-    const [lang, setLang] = useState('my');
+    const [lang, setLang] = useLanguage();
 
     const stats = [
         { label: lang === 'my' ? 'အသက်ကြီးသူများ' : 'Elderly helped', value: impact.total_elderly_helped ?? 0, icon: Users },

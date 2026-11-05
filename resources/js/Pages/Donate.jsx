@@ -2,11 +2,12 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, ArrowRight, CreditCard, HandCoins, Landmark, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import PublicLayout from '../Components/PublicLayout';
+import useLanguage from '../hooks/useLanguage';
 
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
 
 export default function Donate({ fundPools = [], paymentDetails = {} }) {
-    const [lang, setLang] = useState('my');
+    const [lang, setLang] = useLanguage();
     const [selectedPoolId, setSelectedPoolId] = useState(fundPools[0]?.id ?? 1);
     const [selectedAmount, setSelectedAmount] = useState(10000);
     const [selectedPayment, setSelectedPayment] = useState(Object.keys(paymentDetails)[0] ?? '');
