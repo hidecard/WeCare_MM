@@ -9,6 +9,7 @@
 - [x] Make donation approval transactional and reject repeat reviews.
 - [x] Wire Community and Home report/volunteer forms to backend endpoints.
 - [x] Store donation slips privately and protect admin slip/certificate downloads.
+- [x] Add a safe Hostinger SSH deployment workflow that preserves `.env` and `storage/`.
 
 ## P0 — Before production
 
@@ -26,6 +27,7 @@
 - [ ] Add feature tests for donations, uploads, admin authorization, reports, volunteers, and migrations.
 - [ ] Add notification jobs for donation review results and field-team updates.
 - [ ] Rewrite README with project setup, deployment, storage, payment, and admin bootstrap instructions.
+- [ ] Run the first Hostinger deployment and verify document root, database, uploads, and rollback procedure.
 
 ## P2 — UX and growth
 

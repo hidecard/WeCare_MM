@@ -51,6 +51,7 @@ routes/
   web.php                   Public and admin web routes
   auth.php                  Authentication routes
 .github/workflows/ci.yml    GitHub Actions CI workflow
+.github/workflows/deploy.yml Hostinger SSH deployment workflow
 TODO.md                     Remaining production work
 ```
 
@@ -196,6 +197,10 @@ GitHub Actions runs on pushes and pull requests targeting `main`. The workflow c
 4. Runs `migrate:fresh --seed` to catch migration/seed failures.
 5. Runs Pest tests.
 6. Builds Vite assets.
+
+After a successful `CI` run on `main`, [`deploy.yml`](.github/workflows/deploy.yml) can deploy the full Laravel application to Hostinger over SSH. It updates the Git checkout without running `git clean`, preserves the server-managed `.env` and `storage/` files, installs production Composer dependencies, builds Vite assets, runs `php artisan migrate --force`, creates the storage link, and clears Laravel caches. It refuses to continue when the configured app path is unsafe, when a production `.env` is missing, or when the target directory is a non-empty directory without a Git checkout.
+
+The deployment workflow requires these repository secrets: `HOSTINGER_SSH_HOST`, `HOSTINGER_SSH_PORT`, `HOSTINGER_SSH_USER`, `HOSTINGER_SSH_KEY`, and `HOSTINGER_APP_PATH`. The SSH public key must be authorized on Hostinger. The app path should be the Laravel project root, not the public web root; the domain document root should point to its `public/` directory.
 
 ## Hostinger deployment notes
 

@@ -1,0 +1,108 @@
+name: Deploy to Hostinger
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hostinger-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy Laravel application
+    if: >-
+      ${{
+        (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+        (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
+      }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure SSH
+        env:
+          HOSTINGER_SSH_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
+          HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.ssh"
+          printf '%s\n' "$HOSTINGER_SSH_KEY" > "$HOME/.ssh/hostinger_deploy"
+          chmod 600 "$HOME/.ssh/hostinger_deploy"
+          ssh-keyscan -p "${{ secrets.HOSTINGER_SSH_PORT }}" -H "$HOSTINGER_SSH_HOST" >> "$HOME/.ssh/known_hosts"
+
+      - name: Deploy over SSH
+        env:
+          APP_PATH: ${{ secrets.HOSTINGER_APP_PATH }}
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/hostinger_deploy" \
+            -p "$SSH_PORT" \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" \
+            "bash -s -- $(printf '%q' "$APP_PATH") $(printf '%q' "$DEPLOY_SHA")" <<'REMOTE_SCRIPT'
+          set -Eeuo pipefail
+
+          APP_PATH="$1"
+          DEPLOY_SHA="$2"
+          REPOSITORY="https://github.com/hidecard/WeCare_MM.git"
+
+          if [ -z "$APP_PATH" ] || [ "$APP_PATH" = "/" ]; then
+              echo "Refusing to deploy with an unsafe HOSTINGER_APP_PATH: '$APP_PATH'"
+              exit 1
+          fi
+
+          if [ -d "$APP_PATH/.git" ]; then
+              cd "$APP_PATH"
+              git fetch --prune origin main
+              git checkout main
+              git reset --hard origin/main
+          elif [ ! -e "$APP_PATH" ]; then
+              mkdir -p "$(dirname "$APP_PATH")"
+              git clone --branch main --depth 1 "$REPOSITORY" "$APP_PATH"
+              cd "$APP_PATH"
+          elif [ -z "$(find "$APP_PATH" -mindepth 1 -maxdepth 1 -print -quit)" ]; then
+              git clone --branch main --depth 1 "$REPOSITORY" "$APP_PATH"
+              cd "$APP_PATH"
+          else
+              echo "Refusing to deploy into a non-empty directory without a Git checkout: $APP_PATH"
+              exit 1
+          fi
+
+          if [ ! -f .env ]; then
+              echo "Missing production .env at $APP_PATH/.env; refusing to continue."
+              exit 1
+          fi
+
+          command -v php >/dev/null || { echo "PHP is not available on the Hostinger account."; exit 1; }
+          command -v composer >/dev/null || { echo "Composer is not available on the Hostinger account."; exit 1; }
+
+          composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+          if command -v npm >/dev/null; then
+              npm ci --ignore-scripts
+              npm run build
+          else
+              echo "npm is not available on the Hostinger account; public/build must already be present."
+          fi
+
+          php artisan migrate --force
+          php artisan storage:link || test -L public/storage
+          php artisan optimize:clear
+
+          echo "Deployment completed for commit $DEPLOY_SHA"
+          echo "Persistent files were preserved: .env, storage/, and vendor/ were not cleaned."
+          REMOTE_SCRIPT
+
+      - name: Remove temporary SSH material
+        if: always()
+        run: rm -f "$HOME/.ssh/hostinger_deploy"
