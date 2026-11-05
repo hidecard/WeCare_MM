@@ -5,12 +5,13 @@
 - [x] Add GitHub Actions CI for PHP setup, migrations, tests, and Vite build.
 - [x] Protect `.env`, `vendor`, and uploaded storage paths from accidental Git tracking.
 - [x] Remove duplicate feature-table migrations so a fresh database can migrate safely.
+- [x] Add explicit user roles and protect admin routes with admin middleware.
+- [x] Make donation approval transactional and reject repeat reviews.
 
 ## P0 — Before production
 
-- [ ] Add a real admin role/policy middleware; prevent normal registered users from accessing `/admin`.
-- [ ] Remove default production credentials from seeders; use a secret or a one-time bootstrap command.
-- [ ] Make donation approval idempotent and transactional; prevent `total_raised` double counting.
+- [ ] Add action-level policies for individual admin resources.
+- [ ] Replace local/testing fallback credentials with a one-time production bootstrap command.
 - [ ] Wire Community report and volunteer forms to their backend endpoints.
 - [ ] Replace hardcoded/demo payment accounts and fake QR visuals with verified configurable payment data.
 - [ ] Move donation slips and receipts to private storage with authorized/signed downloads.

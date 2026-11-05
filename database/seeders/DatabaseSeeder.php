@@ -17,12 +17,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $adminPassword = env('WECARE_ADMIN_PASSWORD');
+
+        if (app()->environment('production') && blank($adminPassword)) {
+            throw new \RuntimeException('WECARE_ADMIN_PASSWORD must be set before seeding production.');
+        }
+
         User::query()->updateOrCreate(
             ['email' => 'admin@wecare.test'],
             [
                 'name' => 'WeCare Admin',
                 'email' => 'admin@wecare.test',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make($adminPassword ?: 'password123'),
+                'role' => 'admin',
             ],
         );
 
@@ -32,6 +39,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Test User',
                 'email' => 'test@example.com',
                 'password' => Hash::make('password123'),
+                'role' => 'user',
             ],
         );
 

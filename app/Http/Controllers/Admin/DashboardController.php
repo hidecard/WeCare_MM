@@ -10,6 +10,7 @@ use App\Models\OutreachTrip;
 use App\Models\SpotReport;
 use App\Models\Volunteer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -187,21 +188,32 @@ class DashboardController extends Controller
             return redirect()->back()->withErrors(['status' => 'Invalid status value.']);
         }
 
-        $donation->status = $status;
+        $updated = DB::transaction(function () use ($donation, $status): bool {
+            $lockedDonation = Donation::query()->lockForUpdate()->findOrFail($donation->id);
 
-        if ($status === 'approved') {
-            $donation->approved_at = now();
-            $donation->certificate_code = $this->generateCertificateCode();
+            if ($lockedDonation->status !== 'pending') {
+                return false;
+            }
 
-            $pool = FundPool::query()->findOrFail($donation->fund_pool_id);
-            $pool->total_raised = $pool->total_raised + $donation->amount;
-            $pool->save();
-        } else {
-            $donation->approved_at = null;
-            $donation->certificate_code = null;
+            if ($status === 'approved') {
+                $pool = FundPool::query()->lockForUpdate()->findOrFail($lockedDonation->fund_pool_id);
+                $pool->increment('total_raised', $lockedDonation->amount);
+                $lockedDonation->approved_at = now();
+                $lockedDonation->certificate_code = $this->generateCertificateCode();
+            } else {
+                $lockedDonation->approved_at = null;
+                $lockedDonation->certificate_code = null;
+            }
+
+            $lockedDonation->status = $status;
+            $lockedDonation->save();
+
+            return true;
+        });
+
+        if (! $updated) {
+            return redirect()->back()->withErrors(['status' => 'This donation has already been reviewed.']);
         }
-
-        $donation->save();
 
         return redirect()->back()->with('success', 'Donation status updated successfully.');
     }

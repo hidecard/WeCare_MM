@@ -25,7 +25,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/management', [DashboardController::class, 'managementIndex'])->name('admin.management');
     Route::get('/admin/fund-pools', [DashboardController::class, 'fundPoolsIndex'])->name('admin.fund-pools.index');
