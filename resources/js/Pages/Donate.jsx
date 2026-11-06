@@ -158,6 +158,11 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                                             ? `${selectedPool.title_mm || selectedPool.title_en} ကို အကူအညီပေးရန် ${currency.format(Number(selectedAmount) || 0)} ရွေးချယ်ထားပါသည်။`
                                             : `Supporting ${selectedPool.title_en || 'general outreach'} with ${currency.format(Number(selectedAmount) || 0)}.`}
                                     </p>
+                                    {fundPools.length === 0 && (
+                                        <p role="alert" className="mt-4 rounded-xl bg-amber-100 p-3 text-sm font-semibold text-amber-900">
+                                            {lang === 'my' ? 'လက်ရှိ လှူဒါန်းရန် ရန်ပုံငွေ မရှိသေးပါ။ ကျေးဇူးပြု၍ နောက်မှ ပြန်ကြိုးစားပါ။' : 'No donation funds are available right now. Please try again later.'}
+                                        </p>
+                                    )}
                                 </div>
                             )}
 
@@ -178,6 +183,11 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                                             <span className="rounded-full bg-white/10 px-2 py-1 text-xs font-medium">{details.phone}</span>
                                         </button>
                                     ))}
+                                    {Object.keys(paymentDetails).length === 0 && (
+                                        <p role="alert" className="rounded-xl bg-amber-100 p-3 text-sm font-semibold text-amber-900">
+                                            {lang === 'my' ? 'ငွေပေးချေမှုနည်းလမ်း မသတ်မှတ်ရသေးပါ။ အုပ်ချုပ်သူထံ ဆက်သွယ်ပါ။' : 'No payment methods are configured yet. Please contact the administrator.'}
+                                        </p>
+                                    )}
                                     <div className="rounded-2xl bg-white/5 p-4">
                                         <div className="flex items-center gap-2 text-emerald-50"><CreditCard className="h-4 w-4" /> {selectedPayment}</div>
                                         <p className="mt-2 text-sm text-emerald-50/80">{paymentDetails[selectedPayment]?.phone}</p>
@@ -187,6 +197,13 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
 
                             {step === 3 && (
                                 <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+                                    {Object.keys(donationForm.errors).length > 0 && (
+                                        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
+                                            {Object.entries(donationForm.errors).map(([field, message]) => (
+                                                <p key={field}>{message}</p>
+                                            ))}
+                                        </div>
+                                    )}
                                     <div className="grid gap-3 sm:grid-cols-2">
                                         <input
                                             type="text"
@@ -221,9 +238,12 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                                     />
                                     <input
                                         type="file"
+                                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                        required
                                         onChange={(event) => donationForm.setData('slip_image', event.target.files[0])}
                                         className="block w-full rounded-xl border border-dashed border-white/15 bg-white/5 px-3 py-2 text-sm text-emerald-50/70 file:mr-3 file:rounded-full file:border-0 file:bg-[#F59E0B] file:px-3 file:py-2 file:text-[#065F46] file:font-semibold"
                                     />
+                                    <p className="-mt-2 text-xs text-emerald-50/70">{lang === 'my' ? 'ငွေလွှဲပြေစာပုံ (JPG, PNG, WEBP; 4 MB အထိ) ထည့်ပါ။' : 'Upload your payment slip (JPG, PNG, WEBP; up to 4 MB).'}</p>
                                     <button type="submit" className="w-full rounded-full bg-[#F59E0B] px-4 py-3 text-base font-bold text-[#065F46] hover:bg-amber-400" disabled={donationForm.processing}>
                                         {donationForm.processing ? (lang === 'my' ? 'တင်သွင်းနေသည်...' : 'Submitting...') : (lang === 'my' ? 'လှူဒါန်းမှုတင်သွင်းရန်' : 'Submit donation')}
                                     </button>
@@ -238,13 +258,16 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                                 >
                                     {lang === 'my' ? 'နောက်သို့' : 'Back'}
                                 </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setStep((current) => Math.min(3, current + 1))}
-                                    className="inline-flex items-center gap-2 rounded-full bg-[#F59E0B] px-4 py-2 text-sm font-semibold text-[#065F46] hover:bg-amber-400"
-                                >
-                                    {lang === 'my' ? 'ဆက်လုပ်မည်' : 'Next'} <ArrowRight className="h-4 w-4" />
-                                </button>
+                                {step < 3 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setStep((current) => Math.min(3, current + 1))}
+                                        disabled={(step === 1 && fundPools.length === 0) || (step === 2 && !paymentDetails[selectedPayment])}
+                                        className="inline-flex items-center gap-2 rounded-full bg-[#F59E0B] px-4 py-2 text-sm font-semibold text-[#065F46] hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {lang === 'my' ? 'ဆက်လုပ်မည်' : 'Next'} <ArrowRight className="h-4 w-4" />
+                                    </button>
+                                )}
                             </div>
                         </section>
                     </div>

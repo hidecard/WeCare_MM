@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 it('completes payment method CRUD and allows donors to submit with a custom method', function () {
     Storage::fake('public');
     Storage::fake('local');
+    PaymentMethod::query()->delete();
 
     $admin = User::factory()->create(['role' => 'admin']);
     $this->actingAs($admin);

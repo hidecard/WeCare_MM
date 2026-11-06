@@ -7,6 +7,15 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
+it('provides the legacy payment options on the public donation page after migration', function () {
+    $this->get(route('donate'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Donate')
+            ->where('paymentDetails.KBZPay.phone', '09 123 456 789')
+            ->where('paymentDetails.WavePay.phone', '09 987 654 321'));
+});
+
 it('lets a donor track a submitted donation and access the certificate after approval', function () {
     Storage::fake('local');
 
@@ -18,7 +27,7 @@ it('lets a donor track a submitted donation and access the certificate after app
     ]);
 
     PaymentMethod::query()->create([
-        'name' => 'KBZPay',
+        'name' => 'ReceiptPay',
         'account_name' => 'WeCare Myanmar',
         'account_number' => '09123456789',
         'is_active' => true,
@@ -28,7 +37,7 @@ it('lets a donor track a submitted donation and access the certificate after app
     $this->post(route('donations.store'), [
         'fund_pool_id' => $pool->id,
         'amount' => 25000,
-        'payment_method' => 'KBZPay',
+        'payment_method' => 'ReceiptPay',
         'donor_name' => 'Test Donor',
         'phone' => '09912345678',
         'is_anonymous' => false,
