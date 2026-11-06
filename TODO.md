@@ -38,7 +38,7 @@
 - [x] Add explicit labels and error associations to all Community and Volunteer fields, then verify keyboard and screen-reader navigation.
 - [x] Add report reference numbers and a public status view for community spot reports without exposing beneficiary personal information.
 - [x] Add mobile-friendly filters for outreach activity by township and month, including a clear-filters action and empty state.
-- [ ] Add loading, offline/error, and retry states to public forms and status checks.
+- [x] Add loading, offline/error, and retry states to public forms and status checks.
 - [ ] Add a reusable shared DonationFlow component for Home and Donate pages to remove duplicated form logic.
 
 ## P0 — Before production

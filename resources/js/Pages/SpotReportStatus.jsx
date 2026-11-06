@@ -10,6 +10,7 @@ export default function SpotReportStatus() {
     const [result, setResult] = useState(null);
     const [error, setError] = useState('');
     const [processing, setProcessing] = useState(false);
+    const [lastLookup, setLastLookup] = useState('');
     const copy = (myanmar, english) => (lang === 'my' ? myanmar : english);
 
     const statusLabels = {
@@ -31,12 +32,18 @@ export default function SpotReportStatus() {
         setProcessing(true);
         setError('');
         setResult(null);
+        setLastLookup(code);
         try {
+            if (!navigator.onLine) {
+                throw new Error('offline');
+            }
             const response = await fetch(route('spot-reports.status', code), { headers: { Accept: 'application/json' }, cache: 'no-store' });
             if (!response.ok) throw new Error('not-found');
             setResult(await response.json());
-        } catch {
-            setError(copy('ဒီသတင်းပေးမှုအမှတ်ကို မတွေ့ပါ။ ပြန်စစ်ပြီး ထပ်ကြိုးစားပါ။', 'We could not find this report. Check the reference code and try again.'));
+        } catch (lookupError) {
+            setError(lookupError.message === 'offline'
+                ? copy('အင်တာနက်ချိတ်ဆက်မှု မရှိသေးပါ။ ချိတ်ဆက်ပြီး ပြန်ကြိုးစားပါ။', 'You appear to be offline. Reconnect and try again.')
+                : copy('ဒီသတင်းပေးမှုအမှတ်ကို မတွေ့ပါ။ ပြန်စစ်ပြီး ထပ်ကြိုးစားပါ။', 'We could not find this report. Check the reference code and try again.'));
         } finally {
             setProcessing(false);
         }
@@ -60,7 +67,7 @@ export default function SpotReportStatus() {
                             </div>
                         </form>
                     </section>
-                    {error && <p role="alert" className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">{error}</p>}
+                    {error && <div role="alert" className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800"><p>{error}</p>{lastLookup && <button type="button" onClick={handleSubmit} className="mt-3 rounded-full bg-white px-3 py-2 text-xs font-bold text-red-800 ring-1 ring-red-200">{copy('ပြန်ကြိုးစားရန်', 'Try again')}</button>}</div>}
                     {result && <section className="mt-5 rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-100 sm:p-8" aria-live="polite">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">{copy('အခြေအနေ', 'Status')}</p><h2 className="mt-2 text-2xl font-black text-slate-900">{result.township}</h2></div><span className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-100 px-3 py-2 text-xs font-bold text-emerald-800"><CheckCircle2 className="h-4 w-4" /> {statusLabels[result.status] || statusLabels.unread}</span></div>
                         <div className="mt-6 grid gap-3 sm:grid-cols-2"><div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs text-slate-600">{copy('သတင်းပေးမှုအမှတ်', 'Reference')}</p><p className="mt-1 font-mono text-sm font-bold text-slate-900">{result.reference_code}</p></div><div className="rounded-2xl bg-amber-50 p-4"><p className="text-xs text-amber-700">{copy('အရေးပေါ်အဆင့်', 'Urgency')}</p><p className="mt-1 text-sm font-bold text-slate-900">{result.urgency}</p></div></div>
