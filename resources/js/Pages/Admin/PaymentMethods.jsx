@@ -78,7 +78,8 @@ export default function PaymentMethods({ paymentMethods = [] }) {
             ? route('admin.payment-methods.update', editingId)
             : route('admin.payment-methods.store');
 
-        form.transform((data) => ({ ...data, _method: editingId ? 'patch' : undefined })).post(url, {
+        form.transform((data) => ({ ...data, _method: editingId ? 'patch' : undefined }));
+        form.post(url, {
             forceFormData: true,
             preserveScroll: true,
             onSuccess: resetForm,
