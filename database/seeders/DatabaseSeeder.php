@@ -2,9 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\FundPool;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,11 +17,64 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        User::query()->updateOrCreate(
+            ['email' => 'admin@wecare.test'],
+            [
+                'name' => 'WeCare Admin',
+                'email' => 'admin@wecare.test',
+                'password' => Hash::make('password123'),
+            ],
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        User::query()->updateOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+                'password' => Hash::make('password123'),
+            ],
+        );
+
+        $fundPools = [
+            [
+                'title_mm' => 'နေ့စဉ်အစားအစာ',
+                'title_en' => 'Daily Meals',
+                'description' => 'Warm meals and basic support for elders on the street.',
+                'unit_cost' => 5000,
+                'total_raised' => 0,
+                'is_active' => true,
+            ],
+            [
+                'title_mm' => 'အရေးပေါ်ဆေးဝါး',
+                'title_en' => 'Emergency Medical',
+                'description' => 'Medicine, consultation, and urgent caregiver support.',
+                'unit_cost' => 10000,
+                'total_raised' => 0,
+                'is_active' => true,
+            ],
+            [
+                'title_mm' => 'အဝတ်အစား / အဖုံးအကာ',
+                'title_en' => 'Clothing & Blankets',
+                'description' => 'Warm blankets, clothing, and essential comfort kits.',
+                'unit_cost' => 15000,
+                'total_raised' => 0,
+                'is_active' => true,
+            ],
+            [
+                'title_mm' => 'အထွေထွေလမ်းဘေးထောက်ပံ့မှု',
+                'title_en' => 'General Outreach',
+                'description' => 'Flexible support for urgent street outreach needs.',
+                'unit_cost' => 8000,
+                'total_raised' => 0,
+                'is_active' => true,
+            ],
+        ];
+
+        foreach ($fundPools as $pool) {
+            FundPool::query()->updateOrCreate(
+                ['title_en' => $pool['title_en']],
+                $pool,
+            );
+        }
     }
 }
