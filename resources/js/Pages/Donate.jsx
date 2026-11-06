@@ -2,6 +2,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, ArrowRight, Check, Copy, CreditCard, HandCoins, Landmark, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import PublicLayout from '../Components/PublicLayout';
+import DonationFlow from '../Components/DonationFlow';
 import useLanguage from '../hooks/useLanguage';
 import { saveDonationReceipt } from '../lib/donationReceipts';
 
@@ -103,73 +104,7 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                     </div>
 
                     <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-                        <section className="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-100">
-                            <div className="flex items-center gap-3">
-                                <div className="rounded-2xl bg-amber-100 p-3 text-amber-700"><HandCoins className="h-5 w-5" /></div>
-                                <div>
-                                    <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-700">{lang === 'my' ? 'လှူဒါန်းရန်' : 'Support now'}</p>
-                                    <h1 className="mt-1 text-3xl font-black text-slate-900">{lang === 'my' ? 'အရင်းအမြစ်ရွေးချယ်ပါ' : 'Choose a fund pool'}</h1>
-                                </div>
-                            </div>
-
-                            <div className="mt-6 space-y-3">
-                                {fundPools.map((pool) => (
-                                    <button
-                                        key={pool.id}
-                                        type="button"
-                                        onClick={() => handlePoolSelect(pool.id)}
-                                        className={`w-full rounded-2xl border p-4 text-left transition ${
-                                            Number(selectedPoolId) === Number(pool.id)
-                                                ? 'border-emerald-600 bg-emerald-50 shadow-sm'
-                                                : 'border-slate-200 bg-slate-50 hover:border-emerald-200 hover:bg-emerald-50/30'
-                                        }`}
-                                    >
-                                        <div className="flex items-center justify-between gap-3">
-                                            <div>
-                                                <p className="font-bold text-slate-900">{pool.title_mm || pool.title_en}</p>
-                                                <p className="text-sm text-slate-600">{pool.description}</p>
-                                            </div>
-                                            <span className="rounded-full bg-white px-2 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
-                                                {currency.format(Number(pool.unit_cost || 0))}
-                                            </span>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-
-                            <div className="mt-6">
-                                <p className="text-sm font-semibold text-slate-700">{lang === 'my' ? 'ပမာဏရွေးချယ်ပါ' : 'Choose amount'}</p>
-                                <div className="mt-3 flex flex-wrap gap-2">
-                                    {[5000, 10000, 30000, 50000].map((amount) => (
-                                        <button
-                                            key={amount}
-                                            type="button"
-                                            onClick={() => handleAmountSelect(amount)}
-                                            className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                                                Number(selectedAmount) === Number(amount)
-                                                    ? 'bg-[#F59E0B] text-[#065F46]'
-                                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                                            }`}
-                                        >
-                                            {currency.format(amount)}
-                                        </button>
-                                    ))}
-                                </div>
-                                <div className="mt-4 rounded-2xl border border-dashed border-amber-300 bg-amber-50 p-3">
-                                    <label htmlFor="custom-amount" className="text-sm font-medium text-slate-700">{lang === 'my' ? 'စိတ်ကြိုက်ပမာဏ' : 'Custom amount'}</label>
-                                    <input
-                                        id="custom-amount"
-                                        type="number"
-                                        min="1000"
-                                        step="1000"
-                                        value={selectedAmount}
-                                        onChange={(event) => handleAmountSelect(event.target.value)}
-                                        className="mt-2 w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-slate-800 outline-none focus:border-emerald-500"
-                                    />
-                                    {Number(selectedAmount) < 1000 && <p className="mt-2 text-xs font-semibold text-red-700">{lang === 'my' ? 'အနည်းဆုံး MMK 1,000 ထည့်ပါ။' : 'Minimum amount is MMK 1,000.'}</p>}
-                                </div>
-                            </div>
-                        </section>
+                        <DonationFlow fundPools={fundPools} selectedPoolId={selectedPoolId} selectedAmount={selectedAmount} onPoolSelect={handlePoolSelect} onAmountSelect={handleAmountSelect} lang={lang} />
 
                         <section className="rounded-[2rem] bg-[#065F46] p-6 text-white shadow-lg shadow-emerald-900/20">
                             <div className="flex items-center justify-between">

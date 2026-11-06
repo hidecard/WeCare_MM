@@ -39,7 +39,8 @@
 - [x] Add report reference numbers and a public status view for community spot reports without exposing beneficiary personal information.
 - [x] Add mobile-friendly filters for outreach activity by township and month, including a clear-filters action and empty state.
 - [x] Add loading, offline/error, and retry states to public forms and status checks.
-- [ ] Add a reusable shared DonationFlow component for Home and Donate pages to remove duplicated form logic.
+- [x] Extract the shared fund-pool and amount selector into a reusable DonationFlow component used by Home and Donate.
+- [ ] Move the remaining payment, donor-details, slip-upload, and submit-step logic into DonationFlow without changing the current donation behavior.
 
 ## P0 — Before production
 
