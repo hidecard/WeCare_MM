@@ -43,6 +43,29 @@ const renderPagination = (pagination, onPageChange) => {
     );
 };
 
+const ReportCard = ({ report, draft, statusStyles, onUpdate, onSave }) => (
+    <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex items-start justify-between gap-3">
+            <div><p className="font-bold text-slate-900">{report.township}</p><p className="mt-1 text-xs text-slate-500">{formatDateTime(report.time_seen)}</p></div>
+            <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${statusStyles[draft.status] ?? 'bg-slate-100 text-slate-700'}`}>{draft.status}</span>
+        </div>
+        <div className="mt-4 space-y-2 text-sm text-slate-700">
+            <p><span className="font-semibold text-slate-500">Landmark:</span> {report.street_landmark}</p>
+            <p><span className="font-semibold text-slate-500">Condition:</span> {report.condition_note}</p>
+            <p><span className="font-semibold text-slate-500">Reporter:</span> {report.reporter_phone || 'Anonymous'}</p>
+        </div>
+        <div className="mt-4 space-y-2 rounded-xl bg-slate-50 p-3">
+            <div className="grid grid-cols-2 gap-2">
+                <select aria-label="Report status" value={draft.status} onChange={(event) => onUpdate('status', event.target.value)} className={`rounded-full border-0 px-2.5 py-2 text-[10px] font-bold uppercase tracking-[0.12em] ${statusStyles[draft.status] ?? 'bg-slate-100 text-slate-700'}`}>{['unread', 'checked', 'in_progress', 'resolved'].map((status) => <option key={status} value={status}>{status}</option>)}</select>
+                <select aria-label="Report urgency" value={draft.urgency} onChange={(event) => onUpdate('urgency', event.target.value)} className="rounded-full border border-slate-200 bg-white px-2.5 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-600">{['low', 'normal', 'high', 'urgent'].map((urgency) => <option key={urgency} value={urgency}>{urgency}</option>)}</select>
+            </div>
+            <input aria-label="Assigned to" value={draft.assigned_to} onChange={(event) => onUpdate('assigned_to', event.target.value)} placeholder="Assigned to" className="w-full rounded-lg border border-slate-200 px-2 py-2 text-xs" />
+            <textarea aria-label="Follow-up note" value={draft.follow_up_note} onChange={(event) => onUpdate('follow_up_note', event.target.value)} placeholder="Follow-up note" rows="2" className="w-full rounded-lg border border-slate-200 px-2 py-2 text-xs" />
+            <button type="button" onClick={onSave} className="w-full rounded-full bg-emerald-700 px-3 py-2 text-xs font-bold text-white">Save workflow</button>
+        </div>
+    </article>
+);
+
 export default function Reports({ spotReports = [] }) {
     const normalizedReports = Array.isArray(spotReports) ? { data: spotReports, links: [] } : (spotReports ?? {});
     const reports = normalizedReports.data ?? [];
@@ -158,7 +181,11 @@ export default function Reports({ spotReports = [] }) {
                                         </div>
                                     </div>
 
-                                    <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                                    <>
+                                    <div className="space-y-3 md:hidden">
+                                        {reports.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">No confidential reports yet.</div> : reports.map((report) => <ReportCard key={`mobile-${report.id}`} report={report} draft={draftFor(report)} statusStyles={statusStyles} onUpdate={(field, value) => updateDraft(report, field, value)} onSave={() => saveWorkflow(report)} />)}
+                                    </div>
+                                    <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 md:block">
                                         <table className="min-w-full text-left">
                                             <thead className="bg-slate-50 text-[10px] uppercase tracking-[0.2em] text-slate-500">
                                                 <tr>
@@ -202,6 +229,7 @@ export default function Reports({ spotReports = [] }) {
                                             </tbody>
                                         </table>
                                     </div>
+                                    </>
 
                                     {renderPagination(pagination, handlePageChange)}
                                 </section>

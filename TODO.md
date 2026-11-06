@@ -62,7 +62,7 @@
 
 - [ ] Extract shared donation, spot-report, and volunteer form components.
 - [ ] Complete Burmese/English translations across every remaining admin and public label; Myanmar-friendly font stack is already added.
-- [ ] Improve mobile admin tables into card/list layouts.
+- [x] Improve mobile admin donation review and spot-report tables into touch-friendly card/list layouts while keeping desktop tables.
 - [x] Add accessible labels, visible focus states, and keyboard-safe modal behavior to public flows.
 - [ ] Run a full screen-reader and keyboard navigation pass on public and admin pages.
 - [ ] Fix server-side pagination for public outreach and all admin lists.
