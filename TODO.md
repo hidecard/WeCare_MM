@@ -32,9 +32,9 @@
 
 ## UI/UX Sprint 2 — next
 
-- [ ] Add a dedicated donation-status lookup page using the tracking ID, so status does not depend only on browser localStorage.
-- [ ] Add a donation confirmation summary with review time, next steps, and a copyable tracking ID.
-- [ ] Add client-side file validation for payment slips: file type, 4 MB size limit, replace/remove action, and upload error state.
+- [x] Add a dedicated donation-status lookup page using the tracking ID, so status does not depend only on browser localStorage.
+- [x] Add a donation confirmation summary with next steps, a copyable/displayable tracking ID, and a direct link to the status page.
+- [x] Add client-side file validation for payment slips: accepted image types, 4 MB size limit, preview, and upload error state.
 - [ ] Add explicit labels and error associations to all Community and Volunteer fields, then verify keyboard and screen-reader navigation.
 - [ ] Add report reference numbers and a public status view for community spot reports.
 - [ ] Add mobile filters for outreach activity by township and month.

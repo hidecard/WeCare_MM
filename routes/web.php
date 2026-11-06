@@ -7,12 +7,14 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SpotReportController;
 use App\Http\Controllers\VolunteerController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/donate', [HomeController::class, 'donate'])->name('donate');
 Route::get('/impact', [HomeController::class, 'impact'])->name('impact');
 Route::get('/outreach', [HomeController::class, 'outreach'])->name('outreach');
 Route::get('/community', [HomeController::class, 'community'])->name('community');
+Route::get('/donations/status', fn () => Inertia::render('DonationStatus'))->name('donations.status-page');
 Route::middleware(['auth', 'verified'])->get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 Route::middleware('throttle:10,1')->post('/donations', [DonationController::class, 'store'])->name('donations.store');

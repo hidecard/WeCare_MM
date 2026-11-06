@@ -16,6 +16,7 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
     const [submittedReceipt, setSubmittedReceipt] = useState(null);
     const [copiedPayment, setCopiedPayment] = useState(false);
     const [slipPreview, setSlipPreview] = useState('');
+    const [slipError, setSlipError] = useState('');
     const [step, setStep] = useState(1);
 
     const selectedPool = fundPools.find((pool) => Number(pool.id) === Number(selectedPoolId)) ?? fundPools[0] ?? {};
@@ -75,8 +76,19 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
 
     const handleSlipChange = (event) => {
         const file = event.target.files?.[0];
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+        if (file && (!allowedTypes.includes(file.type) || file.size > 4 * 1024 * 1024)) {
+            event.target.value = '';
+            donationForm.setData('slip_image', null);
+            setSlipPreview('');
+            setSlipError(lang === 'my' ? 'JPG, PNG, WEBP ဖိုင်နှင့် 4 MB အောက်သာ တင်နိုင်ပါသည်။' : 'Please upload a JPG, PNG, or WEBP image under 4 MB.');
+            return;
+        }
+
         donationForm.setData('slip_image', file || null);
         setSlipPreview(file ? URL.createObjectURL(file) : '');
+        setSlipError('');
     };
 
     return (
@@ -289,6 +301,7 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                                         className="mt-1 block w-full rounded-xl border border-dashed border-white/15 bg-white/5 px-3 py-2 text-sm font-normal text-emerald-50/70 file:mr-3 file:rounded-full file:border-0 file:bg-[#F59E0B] file:px-3 file:py-2 file:text-[#065F46] file:font-semibold"
                                     />
                                     </label>
+                                    {slipError && <p role="alert" className="rounded-xl bg-red-100 p-3 text-xs font-semibold text-red-800">{slipError}</p>}
                                     {slipPreview && <img src={slipPreview} alt={lang === 'my' ? 'ငွေလွှဲပြေစာ preview' : 'Payment slip preview'} className="h-40 w-full rounded-xl object-contain bg-white/10 p-2" />}
                                     <p className="-mt-2 text-xs text-emerald-50/70">{lang === 'my' ? 'ငွေလွှဲပြေစာပုံ (JPG, PNG, WEBP; 4 MB အထိ) ထည့်ပါ။' : 'Upload your payment slip (JPG, PNG, WEBP; up to 4 MB).'}</p>
                                     <button type="submit" className="w-full rounded-full bg-[#F59E0B] px-4 py-3 text-base font-bold text-[#065F46] hover:bg-amber-400" disabled={donationForm.processing}>
@@ -344,7 +357,10 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                         <h2 className="text-2xl font-black text-slate-900">{lang === 'my' ? 'လှူဒါန်းမှု လက်ခံရရှိပါပြီ' : 'Donation submitted'}</h2>
                         <p className="mt-3 text-sm text-slate-600">{lang === 'my' ? 'အဖွဲ့မှ စစ်ဆေးပြီးနောက် အခြေအနေကို update ပြုလုပ်ပါမည်။' : 'Thank you. Your donation has been submitted for review.'}</p>
                         {submittedReceipt?.tracking_token && <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-left"><p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">{lang === 'my' ? 'လှူဒါန်းမှုအမှတ်' : 'Tracking ID'}</p><p className="mt-1 break-all font-mono text-sm font-bold text-slate-900">{submittedReceipt.tracking_token}</p></div>}
-                        <button type="button" onClick={() => setShowSuccess(false)} className="mt-5 rounded-full bg-[#F59E0B] px-5 py-2 text-sm font-bold text-[#065F46]">OK</button>
+                        <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
+                            <Link href={route('donations.status-page')} className="rounded-full bg-[#065F46] px-5 py-2 text-sm font-bold text-white">{lang === 'my' ? 'အခြေအနေစစ်ရန်' : 'Track donation'}</Link>
+                            <button type="button" onClick={() => setShowSuccess(false)} className="rounded-full bg-[#F59E0B] px-5 py-2 text-sm font-bold text-[#065F46]">OK</button>
+                        </div>
                     </div>
                 </div>
             )}
