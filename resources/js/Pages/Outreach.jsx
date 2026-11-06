@@ -46,10 +46,18 @@ const renderPagination = (pageCount, currentPage, onPageChange) => {
 export default function Outreach({ recentTrips = [] }) {
     const [lang, setLang] = useLanguage();
     const [tripPage, setTripPage] = useState(1);
+    const [selectedTownship, setSelectedTownship] = useState('all');
+    const [selectedMonth, setSelectedMonth] = useState('');
+    const townships = [...new Set((recentTrips ?? []).map((trip) => trip.township).filter(Boolean))].sort();
+    const filteredTrips = (recentTrips ?? []).filter((trip) => {
+        const townshipMatches = selectedTownship === 'all' || trip.township === selectedTownship;
+        const monthMatches = !selectedMonth || String(trip.trip_date ?? '').startsWith(selectedMonth);
+        return townshipMatches && monthMatches;
+    });
     const tripPageSize = 6;
-    const tripPageCount = Math.max(1, Math.ceil((recentTrips?.length ?? 0) / tripPageSize));
+    const tripPageCount = Math.max(1, Math.ceil((filteredTrips.length ?? 0) / tripPageSize));
     const tripPageStart = (tripPage - 1) * tripPageSize;
-    const visibleTrips = (recentTrips ?? []).slice(tripPageStart, tripPageStart + tripPageSize);
+    const visibleTrips = filteredTrips.slice(tripPageStart, tripPageStart + tripPageSize);
 
     return (
         <>
@@ -65,6 +73,21 @@ export default function Outreach({ recentTrips = [] }) {
                     <section className="rounded-[2rem] bg-[#065F46] p-6 text-white shadow-lg shadow-emerald-900/20">
                         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-100">{lang === 'my' ? 'လမ်းဘေးသွားလာမှု' : 'Street outreach'}</p>
                         <h1 className="mt-2 text-3xl font-black md:text-4xl">{lang === 'my' ? 'မြို့နယ်အလိုက် အကူအညီပေးသွားမှု' : 'Direct support across townships'}</h1>
+                    </section>
+
+                    <section className="mt-6 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-100 sm:p-5" aria-label={lang === 'my' ? 'စစ်ထုတ်ရန်' : 'Filter outreach activity'}>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                            <label htmlFor="outreach-township" className="flex-1 text-sm font-semibold text-slate-700">{lang === 'my' ? 'မြို့နယ်ဖြင့် စစ်ထုတ်ရန်' : 'Filter by township'}
+                                <select id="outreach-township" value={selectedTownship} onChange={(event) => { setSelectedTownship(event.target.value); setTripPage(1); }} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-normal text-slate-800">
+                                    <option value="all">{lang === 'my' ? 'မြို့နယ်အားလုံး' : 'All townships'}</option>
+                                    {townships.map((township) => <option key={township} value={township}>{township}</option>)}
+                                </select>
+                            </label>
+                            <label htmlFor="outreach-month" className="flex-1 text-sm font-semibold text-slate-700">{lang === 'my' ? 'လအလိုက် စစ်ထုတ်ရန်' : 'Filter by month'}
+                                <input id="outreach-month" type="month" value={selectedMonth} onChange={(event) => { setSelectedMonth(event.target.value); setTripPage(1); }} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-normal text-slate-800" />
+                            </label>
+                            {(selectedTownship !== 'all' || selectedMonth) && <button type="button" onClick={() => { setSelectedTownship('all'); setSelectedMonth(''); setTripPage(1); }} className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">{lang === 'my' ? 'ပြန်ရှင်းရန်' : 'Clear filters'}</button>}
+                        </div>
                     </section>
 
                     <div className="mt-8 grid gap-5">
@@ -134,6 +157,7 @@ export default function Outreach({ recentTrips = [] }) {
                                 </article>
                             );
                         })}
+                        {visibleTrips.length === 0 && <div className="rounded-[2rem] border border-dashed border-slate-200 bg-white p-10 text-center text-sm text-slate-500">{lang === 'my' ? 'ရွေးချယ်ထားသော စစ်ထုတ်မှုအတွက် outreach မှတ်တမ်း မရှိသေးပါ။' : 'No outreach activity matches these filters yet.'}</div>}
                     </div>
 
                     {renderPagination(tripPageCount, tripPage, setTripPage)}

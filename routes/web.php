@@ -15,12 +15,14 @@ Route::get('/impact', [HomeController::class, 'impact'])->name('impact');
 Route::get('/outreach', [HomeController::class, 'outreach'])->name('outreach');
 Route::get('/community', [HomeController::class, 'community'])->name('community');
 Route::get('/donations/status', fn () => Inertia::render('DonationStatus'))->name('donations.status-page');
+Route::get('/spot-reports/status', fn () => Inertia::render('SpotReportStatus'))->name('spot-reports.status-page');
 Route::middleware(['auth', 'verified'])->get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 Route::middleware('throttle:10,1')->post('/donations', [DonationController::class, 'store'])->name('donations.store');
 Route::middleware('throttle:60,1')->get('/donations/status/{trackingToken}', [DonationController::class, 'status'])->name('donations.status');
 Route::get('/donations/{donation}/certificate/{certificateCode}', [DonationController::class, 'downloadCertificate'])->name('donations.certificate');
 Route::middleware('throttle:5,1')->post('/spot-reports', [SpotReportController::class, 'store'])->name('spot-reports.store');
+Route::middleware('throttle:60,1')->get('/spot-reports/status/{referenceCode}', [SpotReportController::class, 'status'])->name('spot-reports.status');
 Route::middleware('throttle:5,10')->post('/volunteers', [VolunteerController::class, 'store'])->name('volunteers.store');
 
 Route::middleware('auth')->group(function () {

@@ -136,6 +136,9 @@ export default function PublicLayout({ children, active = 'home', lang = 'my', s
                             <Link href={route('donations.status-page')} className="block hover:text-white">
                                 {lang === 'my' ? 'လှူဒါန်းမှုအခြေအနေ' : 'Donation status'}
                             </Link>
+                            <Link href={route('spot-reports.status-page')} className="block hover:text-white">
+                                {lang === 'my' ? 'သတင်းပေးမှုအခြေအနေ' : 'Report status'}
+                            </Link>
                         </div>
                     </div>
 

@@ -15,6 +15,7 @@ class SpotReport extends Model
         'time_seen',
         'condition_note',
         'reporter_phone',
+        'reference_code',
         'status',
         'urgency',
         'assigned_to',

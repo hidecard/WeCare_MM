@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreSpotReportRequest;
 use App\Models\SpotReport;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
 
 class SpotReportController extends Controller
 {
@@ -21,16 +23,44 @@ class SpotReportController extends Controller
             return redirect()->back()->withErrors(['spot_report' => 'A matching report was already submitted recently.']);
         }
 
-        SpotReport::query()->create([
+        $spotReport = SpotReport::query()->create([
             'township' => $request->input('township'),
             'street_landmark' => $request->input('street_landmark'),
             'time_seen' => $request->input('time_seen'),
             'condition_note' => $request->input('condition_note'),
             'reporter_phone' => $request->input('reporter_phone'),
+            'reference_code' => $this->makeReferenceCode(),
             'status' => 'unread',
             'urgency' => 'normal',
         ]);
 
-        return redirect()->back()->with('success', 'Your spot report has been sent to the field team for review.');
+        return redirect()->back()
+            ->with('success', 'Your spot report has been sent to the field team for review.')
+            ->with('spot_report_reference', $spotReport->reference_code);
+    }
+
+    public function status(string $referenceCode): JsonResponse
+    {
+        $spotReport = SpotReport::query()
+            ->where('reference_code', strtoupper($referenceCode))
+            ->firstOrFail();
+
+        return response()->json([
+            'reference_code' => $spotReport->reference_code,
+            'township' => $spotReport->township,
+            'status' => $spotReport->status,
+            'urgency' => $spotReport->urgency,
+            'submitted_at' => $spotReport->created_at?->toIso8601String(),
+            'follow_up_note' => $spotReport->follow_up_note,
+        ]);
+    }
+
+    protected function makeReferenceCode(): string
+    {
+        do {
+            $code = 'WR-'.Str::upper(Str::random(8));
+        } while (SpotReport::query()->where('reference_code', $code)->exists());
+
+        return $code;
     }
 }
