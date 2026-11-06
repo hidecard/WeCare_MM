@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, ArrowRight, Check, Copy, CreditCard, HandCoins, Landmark, ShieldCheck } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import PublicLayout from '../Components/PublicLayout';
 import DonationFlow from '../Components/DonationFlow';
 import DonationFlowSteps from '../Components/DonationFlowSteps';
@@ -20,6 +20,16 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
     const [slipPreview, setSlipPreview] = useState('');
     const [slipError, setSlipError] = useState('');
     const [step, setStep] = useState(1);
+
+    useEffect(() => {
+        if (!showSuccess) return undefined;
+
+        const closeOnEscape = (event) => {
+            if (event.key === 'Escape') setShowSuccess(false);
+        };
+        document.addEventListener('keydown', closeOnEscape);
+        return () => document.removeEventListener('keydown', closeOnEscape);
+    }, [showSuccess]);
 
     const selectedPool = fundPools.find((pool) => Number(pool.id) === Number(selectedPoolId)) ?? fundPools[0] ?? {};
     const donationForm = useForm({
@@ -198,14 +208,14 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
             </main>
 
             {showSuccess && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-                    <div className="w-full max-w-md rounded-3xl bg-white p-6 text-center shadow-2xl">
-                        <h2 className="text-2xl font-black text-slate-900">{lang === 'my' ? 'လှူဒါန်းမှု လက်ခံရရှိပါပြီ' : 'Donation submitted'}</h2>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" role="presentation">
+                    <div role="dialog" aria-modal="true" aria-labelledby="donation-success-title" className="w-full max-w-md rounded-3xl bg-white p-6 text-center shadow-2xl">
+                        <h2 id="donation-success-title" className="text-2xl font-black text-slate-900">{lang === 'my' ? 'လှူဒါန်းမှု လက်ခံရရှိပါပြီ' : 'Donation submitted'}</h2>
                         <p className="mt-3 text-sm text-slate-600">{lang === 'my' ? 'အဖွဲ့မှ စစ်ဆေးပြီးနောက် အခြေအနေကို update ပြုလုပ်ပါမည်။' : 'Thank you. Your donation has been submitted for review.'}</p>
                         {submittedReceipt?.tracking_token && <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-left"><p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">{lang === 'my' ? 'လှူဒါန်းမှုအမှတ်' : 'Tracking ID'}</p><p className="mt-1 break-all font-mono text-sm font-bold text-slate-900">{submittedReceipt.tracking_token}</p></div>}
                         <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
                             <Link href={route('donations.status-page')} className="rounded-full bg-[#065F46] px-5 py-2 text-sm font-bold text-white">{lang === 'my' ? 'အခြေအနေစစ်ရန်' : 'Track donation'}</Link>
-                            <button type="button" onClick={() => setShowSuccess(false)} className="rounded-full bg-[#F59E0B] px-5 py-2 text-sm font-bold text-[#065F46]">OK</button>
+                            <button type="button" onClick={() => setShowSuccess(false)} className="rounded-full bg-[#F59E0B] px-5 py-2 text-sm font-bold text-[#065F46]">{lang === 'my' ? 'ပိတ်ရန်' : 'Close'}</button>
                         </div>
                     </div>
                 </div>

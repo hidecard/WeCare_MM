@@ -160,6 +160,16 @@ export default function Home({ impact = {}, fundPools = [], recentDonations = []
         }
     }, [flash?.success]);
 
+    useEffect(() => {
+        if (!showSuccessModal) return undefined;
+
+        const closeOnEscape = (event) => {
+            if (event.key === 'Escape') setShowSuccessModal(false);
+        };
+        document.addEventListener('keydown', closeOnEscape);
+        return () => document.removeEventListener('keydown', closeOnEscape);
+    }, [showSuccessModal]);
+
     const handleDonationSubmit = (event) => {
         event.preventDefault();
         donationForm.post(route('donations.store'), {
@@ -199,23 +209,23 @@ export default function Home({ impact = {}, fundPools = [], recentDonations = []
             <Head title={lang === 'my' ? 'WeCare Myanmar | မူလစာမျက်နှာ' : 'WeCare Myanmar | Home'} />
             <PublicLayout active="home" lang={lang} setLang={setLang}>
                 {showSuccessModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-                        <div className="w-full max-w-md rounded-[2rem] border border-emerald-100 bg-white p-6 shadow-2xl">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" role="presentation">
+                        <div role="dialog" aria-modal="true" aria-labelledby="home-donation-success-title" className="w-full max-w-md rounded-[2rem] border border-emerald-100 bg-white p-6 shadow-2xl">
                             <div className="flex justify-end">
-                                <button type="button" onClick={() => setShowSuccessModal(false)} className="rounded-full border border-slate-200 p-2 text-slate-500 hover:text-slate-700">
+                                <button type="button" aria-label={lang === 'my' ? 'ပိတ်ရန်' : 'Close'} onClick={() => setShowSuccessModal(false)} className="rounded-full border border-slate-200 p-2 text-slate-500 hover:text-slate-700">
                                     <X className="h-4 w-4" />
                                 </button>
                             </div>
                             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                                 <BadgeCheck className="h-8 w-8" />
                             </div>
-                            <h3 className="mt-5 text-center text-2xl font-black text-slate-900">Donation received</h3>
+                            <h3 id="home-donation-success-title" className="mt-5 text-center text-2xl font-black text-slate-900">{lang === 'my' ? 'လှူဒါန်းမှု လက်ခံရရှိပါပြီ' : 'Donation received'}</h3>
                             <p className="mt-3 text-center text-sm text-slate-600">
-                                {flash?.success || 'Thank you. Your donation request has been received and is being reviewed by our outreach team.'}
+                                {flash?.success || (lang === 'my' ? 'ကျေးဇူးတင်ပါတယ်။ သင်၏လှူဒါန်းမှုကို လက်ခံရရှိပြီး အဖွဲ့မှ စစ်ဆေးနေပါသည်။' : 'Thank you. Your donation request has been received and is being reviewed by our outreach team.')}
                             </p>
                             <div className="mt-6 flex justify-center">
                                 <button type="button" onClick={() => setShowSuccessModal(false)} className="rounded-full bg-[#F59E0B] px-5 py-2.5 text-sm font-bold text-[#065F46] shadow-sm hover:bg-amber-400">
-                                    Close
+                                    {lang === 'my' ? 'ပိတ်ရန်' : 'Close'}
                                 </button>
                             </div>
                         </div>

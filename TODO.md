@@ -61,9 +61,10 @@
 ## P2 — UX and growth
 
 - [ ] Extract shared donation, spot-report, and volunteer form components.
-- [ ] Complete Burmese/English translations and add a Myanmar-friendly font stack.
+- [ ] Complete Burmese/English translations across every remaining admin and public label; Myanmar-friendly font stack is already added.
 - [ ] Improve mobile admin tables into card/list layouts.
-- [ ] Add accessible labels, focus states, modal behavior, and screen-reader checks.
+- [x] Add accessible labels, visible focus states, and keyboard-safe modal behavior to public flows.
+- [ ] Run a full screen-reader and keyboard navigation pass on public and admin pages.
 - [ ] Fix server-side pagination for public outreach and all admin lists.
 - [ ] Remove duplicate/dead `Welcome.jsx` flow after confirming production entry points.
 - [ ] Add donor status lookup, receipt PDF, export reports, and public monthly impact reporting.
