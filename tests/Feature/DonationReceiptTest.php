@@ -7,13 +7,13 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
-it('provides the legacy payment options on the public donation page after migration', function () {
+it('provides default donation funds without exposing unverified payment accounts', function () {
     $this->get(route('donate'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('Donate')
-            ->where('paymentDetails.KBZPay.phone', '09 123 456 789')
-            ->where('paymentDetails.WavePay.phone', '09 987 654 321'));
+            ->has('fundPools', 4)
+            ->has('paymentDetails', 0));
 });
 
 it('lets a donor track a submitted donation and access the certificate after approval', function () {
