@@ -70,7 +70,7 @@ export default function DonationStatusTracker({ lang = 'my' }) {
             pending: 'Admin အတည်ပြုရန် စစ်ဆေးနေဆဲဖြစ်သည်။ အတည်ပြုပြီးပါက ကျေးဇူးတင်လွှာကို ဒီနေရာတွင် အလိုအလျောက်ရရှိပါမည်။',
             approved: 'လှူဒါန်းမှုကို အတည်ပြုပြီးပါပြီ။ ကျေးဇူးတင်လွှာ Certificate ရရှိနိုင်ပါပြီ။',
             rejected: 'ဤလှူဒါန်းမှုကို အတည်မပြုနိုင်ခဲ့ပါ။ အသေးစိတ်အတွက် WeCare အဖွဲ့ကို ဆက်သွယ်ပါ။',
-            certificate: 'Certificate ကြည့်ရန် / PDF အဖြစ်သိမ်းရန်',
+            certificate: 'Certificate ပုံ (PNG) ရယူရန်',
             remove: 'ဖယ်ရှားရန်',
         }
         : {
@@ -78,7 +78,7 @@ export default function DonationStatusTracker({ lang = 'my' }) {
             pending: 'Waiting for admin review. Your appreciation certificate will appear here automatically after approval.',
             approved: 'Your donation is approved. Your appreciation certificate is ready.',
             rejected: 'This donation could not be approved. Please contact the WeCare team for details.',
-            certificate: 'View certificate / Save as PDF',
+            certificate: 'Download certificate image (PNG)',
             remove: 'Remove',
         };
 

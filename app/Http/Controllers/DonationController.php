@@ -7,6 +7,7 @@ use App\Models\Donation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
 class DonationController extends Controller
@@ -80,9 +81,14 @@ class DonationController extends Controller
             abort(404, 'Certificate not available yet.');
         }
 
-        return response()->view('certificates.donation', [
-            'donation' => $donation,
-        ])->header('Content-Type', 'text/html; charset=UTF-8');
+        return Inertia::render('DonationCertificate', [
+            'donation' => [
+                'donor_name' => $donation->is_anonymous ? 'Anonymous donor' : ($donation->donor_name ?: 'Supporter'),
+                'amount' => (string) $donation->amount,
+                'certificate_code' => $donation->certificate_code,
+                'approved_date' => $donation->approved_at?->format('F j, Y'),
+            ],
+        ]);
     }
 
     protected function makeUniqueFilename($file): string

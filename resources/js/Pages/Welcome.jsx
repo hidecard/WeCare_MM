@@ -380,8 +380,8 @@ export default function Welcome({ impact = {}, fundPools = [], recentDonations =
                                     </div>
                                     <p className="mt-3 text-2xl font-black text-[#065F46]">{currency.format(Number(donation.amount) || 0)}</p>
                                     <p className="mt-1 text-xs text-slate-500">Certificate: {donation.certificate_code}</p>
-                                    <a href={donation.certificate_code ? route('donations.certificate', { donation: donation.id, certificateCode: donation.certificate_code }) : '#'} className={`mt-4 inline-flex rounded-full border px-3 py-2 text-xs font-bold ${donation.certificate_code ? 'border-emerald-200 bg-white text-emerald-700 hover:border-emerald-400' : 'pointer-events-none border-slate-200 bg-slate-100 text-slate-400'}`} download>
-                                        {donation.certificate_code ? 'Download certificate' : 'Pending certificate'}
+                                    <a href={donation.certificate_code ? route('donations.certificate', { donation: donation.id, certificateCode: donation.certificate_code }) : '#'} className={`mt-4 inline-flex rounded-full border px-3 py-2 text-xs font-bold ${donation.certificate_code ? 'border-emerald-200 bg-white text-emerald-700 hover:border-emerald-400' : 'pointer-events-none border-slate-200 bg-slate-100 text-slate-400'}`} target={donation.certificate_code ? '_blank' : undefined} rel={donation.certificate_code ? 'noreferrer' : undefined}>
+                                        {donation.certificate_code ? 'Download certificate image (PNG)' : 'Pending certificate'}
                                     </a>
                                 </div>
                             ))}

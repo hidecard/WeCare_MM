@@ -76,9 +76,11 @@ it('lets a donor track a submitted donation and access the certificate after app
 
     $this->get($certificateUrl)
         ->assertOk()
-        ->assertSee('Test Donor')
-        ->assertSee('25,000 MMK')
-        ->assertSee('Print / Save as PDF');
+        ->assertInertia(fn ($page) => $page
+            ->component('DonationCertificate')
+            ->where('donation.donor_name', 'Test Donor')
+            ->where('donation.certificate_code', $donation->certificate_code)
+            ->where('donation.approved_date', $donation->approved_at->format('F j, Y')));
 });
 
 it('does not disclose donation status for an invalid tracking token', function () {
