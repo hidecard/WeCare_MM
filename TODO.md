@@ -18,6 +18,29 @@
 - [x] Add public-form rate limits and recent duplicate-submit protection.
 - [x] Add audit logs for donation reviews, spot-report workflow changes, and fund-pool changes.
 
+## UI/UX Sprint 1 — completed in this pass
+
+- [x] Keep placeholder metrics and contact data unchanged while improving the public UI flow.
+- [x] Pass active payment methods from the public controller to the Home and Donate pages, including account number, account name, and QR URL fields.
+- [x] Fix public navigation active states for Burmese and English labels, add `aria-current` and mobile menu `aria-expanded` behavior.
+- [x] Add a mobile-only sticky Donate CTA so the primary action remains reachable on small screens.
+- [x] Improve donation amount validation with a MMK 1,000 minimum, explicit form labels, payment-account copy action, and payment-slip image preview.
+- [x] Show the donation tracking ID in the submission success dialog when the backend returns a receipt token.
+- [x] Remove unrelated fallback stock photos from the public outreach gallery; show a clear empty state when real photos are unavailable.
+- [x] Correct the Impact page label so completed outreach is not presented as an upcoming activity.
+- [x] Add a Myanmar-friendly system font stack, smooth scrolling, and visible keyboard focus states.
+
+## UI/UX Sprint 2 — next
+
+- [ ] Add a dedicated donation-status lookup page using the tracking ID, so status does not depend only on browser localStorage.
+- [ ] Add a donation confirmation summary with review time, next steps, and a copyable tracking ID.
+- [ ] Add client-side file validation for payment slips: file type, 4 MB size limit, replace/remove action, and upload error state.
+- [ ] Add explicit labels and error associations to all Community and Volunteer fields, then verify keyboard and screen-reader navigation.
+- [ ] Add report reference numbers and a public status view for community spot reports.
+- [ ] Add mobile filters for outreach activity by township and month.
+- [ ] Add loading, offline/error, and retry states to public forms and status checks.
+- [ ] Add a reusable shared DonationFlow component for Home and Donate pages to remove duplicated form logic.
+
 ## P0 — Before production
 
 - [ ] Add action-level policies for individual admin resources.

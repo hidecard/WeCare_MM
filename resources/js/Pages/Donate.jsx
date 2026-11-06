@@ -1,5 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, ArrowRight, CreditCard, HandCoins, Landmark, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Copy, CreditCard, HandCoins, Landmark, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import PublicLayout from '../Components/PublicLayout';
 import useLanguage from '../hooks/useLanguage';
@@ -13,6 +13,9 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
     const [selectedAmount, setSelectedAmount] = useState(10000);
     const [selectedPayment, setSelectedPayment] = useState(Object.keys(paymentDetails)[0] ?? '');
     const [showSuccess, setShowSuccess] = useState(false);
+    const [submittedReceipt, setSubmittedReceipt] = useState(null);
+    const [copiedPayment, setCopiedPayment] = useState(false);
+    const [slipPreview, setSlipPreview] = useState('');
     const [step, setStep] = useState(1);
 
     const selectedPool = fundPools.find((pool) => Number(pool.id) === Number(selectedPoolId)) ?? fundPools[0] ?? {};
@@ -47,12 +50,33 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
         donationForm.post(route('donations.store'), {
             forceFormData: true,
             onSuccess: (page) => {
-                saveDonationReceipt(page.props.flash?.donation_receipt);
+                const receipt = page.props.flash?.donation_receipt;
+                saveDonationReceipt(receipt);
+                setSubmittedReceipt(receipt);
                 donationForm.reset();
                 setStep(1);
                 setShowSuccess(true);
             },
         });
+    };
+
+    const copyPaymentNumber = async () => {
+        const accountNumber = paymentDetails[selectedPayment]?.phone;
+        if (!accountNumber) return;
+
+        try {
+            await navigator.clipboard.writeText(accountNumber.replace(/\s+/g, ''));
+            setCopiedPayment(true);
+            window.setTimeout(() => setCopiedPayment(false), 1800);
+        } catch {
+            setCopiedPayment(false);
+        }
+    };
+
+    const handleSlipChange = (event) => {
+        const file = event.target.files?.[0];
+        donationForm.setData('slip_image', file || null);
+        setSlipPreview(file ? URL.createObjectURL(file) : '');
     };
 
     return (
@@ -120,14 +144,17 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                                     ))}
                                 </div>
                                 <div className="mt-4 rounded-2xl border border-dashed border-amber-300 bg-amber-50 p-3">
-                                    <p className="text-sm font-medium text-slate-700">{lang === 'my' ? 'စိတ်ကြိုက်ပမာဏ' : 'Custom amount'}</p>
+                                    <label htmlFor="custom-amount" className="text-sm font-medium text-slate-700">{lang === 'my' ? 'စိတ်ကြိုက်ပမာဏ' : 'Custom amount'}</label>
                                     <input
+                                        id="custom-amount"
                                         type="number"
                                         min="1000"
+                                        step="1000"
                                         value={selectedAmount}
                                         onChange={(event) => handleAmountSelect(event.target.value)}
                                         className="mt-2 w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-slate-800 outline-none focus:border-emerald-500"
                                     />
+                                    {Number(selectedAmount) < 1000 && <p className="mt-2 text-xs font-semibold text-red-700">{lang === 'my' ? 'အနည်းဆုံး MMK 1,000 ထည့်ပါ။' : 'Minimum amount is MMK 1,000.'}</p>}
                                 </div>
                             </div>
                         </section>
@@ -188,9 +215,14 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                                             {lang === 'my' ? 'ငွေပေးချေမှုနည်းလမ်း မသတ်မှတ်ရသေးပါ။ အုပ်ချုပ်သူထံ ဆက်သွယ်ပါ။' : 'No payment methods are configured yet. Please contact the administrator.'}
                                         </p>
                                     )}
-                                    <div className="rounded-2xl bg-white/5 p-4">
-                                        <div className="flex items-center gap-2 text-emerald-50"><CreditCard className="h-4 w-4" /> {selectedPayment}</div>
-                                        <p className="mt-2 text-sm text-emerald-50/80">{paymentDetails[selectedPayment]?.phone}</p>
+                                        <div className="rounded-2xl bg-white/5 p-4">
+                                            <div className="flex items-center gap-2 text-emerald-50"><CreditCard className="h-4 w-4" /> {selectedPayment}</div>
+                                        <p className="mt-2 text-sm text-emerald-50/80">{paymentDetails[selectedPayment]?.account_name}</p>
+                                        <p className="mt-1 text-sm font-semibold text-white">{paymentDetails[selectedPayment]?.phone}</p>
+                                        <button type="button" onClick={copyPaymentNumber} className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#F59E0B] px-3 py-2 text-sm font-semibold text-[#065F46]">
+                                            {copiedPayment ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                                            {copiedPayment ? (lang === 'my' ? 'ကူးယူပြီးပါပြီ' : 'Copied') : (lang === 'my' ? 'အကောင့်နံပါတ်ကူးယူရန်' : 'Copy account number')}
+                                        </button>
                                     </div>
                                 </div>
                             )}
@@ -204,21 +236,30 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                                             ))}
                                         </div>
                                     )}
+                                    <div className="rounded-2xl bg-white/10 p-4 text-sm text-emerald-50">
+                                        <p className="font-semibold text-white">{lang === 'my' ? 'လှူဒါန်းမှုအကျဉ်းချုပ်' : 'Donation summary'}</p>
+                                        <p className="mt-2">{selectedPool.title_mm || selectedPool.title_en || 'General outreach'} · {currency.format(Number(selectedAmount) || 0)}</p>
+                                        <p className="mt-1">{selectedPayment || (lang === 'my' ? 'ငွေပေးချေမှု မရွေးချယ်ရသေးပါ' : 'Payment method not selected')}</p>
+                                    </div>
                                     <div className="grid gap-3 sm:grid-cols-2">
+                                        <label htmlFor="donor-name" className="text-sm font-semibold text-emerald-50">{lang === 'my' ? 'လှူဒါန်းသူအမည်' : 'Donor name'}
                                         <input
+                                            id="donor-name"
                                             type="text"
                                             value={donationForm.data.donor_name}
                                             onChange={(event) => donationForm.setData('donor_name', event.target.value)}
-                                            placeholder={lang === 'my' ? 'လှူဒါန်းသူအမည်' : 'Donor name'}
-                                            className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-emerald-50/60 outline-none focus:border-[#F59E0B]"
+                                            className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm font-normal text-white placeholder:text-emerald-50/60 outline-none focus:border-[#F59E0B]"
                                         />
+                                        </label>
+                                        <label htmlFor="donor-phone" className="text-sm font-semibold text-emerald-50">{lang === 'my' ? 'ဖုန်းနံပါတ်' : 'Phone'}
                                         <input
+                                            id="donor-phone"
                                             type="tel"
                                             value={donationForm.data.phone}
                                             onChange={(event) => donationForm.setData('phone', event.target.value)}
-                                            placeholder={lang === 'my' ? 'ဖုန်းနံပါတ်' : 'Phone'}
-                                            className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-emerald-50/60 outline-none focus:border-[#F59E0B]"
+                                            className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm font-normal text-white placeholder:text-emerald-50/60 outline-none focus:border-[#F59E0B]"
                                         />
+                                        </label>
                                     </div>
                                     <label className="flex items-center gap-2 text-sm text-emerald-50/90">
                                         <input
@@ -229,20 +270,26 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                                         />
                                         {lang === 'my' ? 'အမည်မဖော်ပြဘဲ လှူဒါန်းမည်' : 'Donate anonymously'}
                                     </label>
+                                    <label htmlFor="wish-note" className="block text-sm font-semibold text-emerald-50">{lang === 'my' ? 'မေတ္တာစာ / အကြံပြုချက်' : 'Wish note or encouragement'}
                                     <textarea
+                                        id="wish-note"
                                         value={donationForm.data.wish_note}
                                         onChange={(event) => donationForm.setData('wish_note', event.target.value)}
                                         rows="3"
-                                        placeholder={lang === 'my' ? 'မေတ္တာစာ / အကြံပြုချက်' : 'Wish note or encouragement'}
-                                        className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-emerald-50/60 outline-none focus:border-[#F59E0B]"
+                                        className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm font-normal text-white placeholder:text-emerald-50/60 outline-none focus:border-[#F59E0B]"
                                     />
+                                    </label>
+                                    <label htmlFor="slip-image" className="block text-sm font-semibold text-emerald-50">{lang === 'my' ? 'ငွေလွှဲပြေစာပုံ' : 'Payment slip'}
                                     <input
+                                        id="slip-image"
                                         type="file"
                                         accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                                         required
-                                        onChange={(event) => donationForm.setData('slip_image', event.target.files[0])}
-                                        className="block w-full rounded-xl border border-dashed border-white/15 bg-white/5 px-3 py-2 text-sm text-emerald-50/70 file:mr-3 file:rounded-full file:border-0 file:bg-[#F59E0B] file:px-3 file:py-2 file:text-[#065F46] file:font-semibold"
+                                        onChange={handleSlipChange}
+                                        className="mt-1 block w-full rounded-xl border border-dashed border-white/15 bg-white/5 px-3 py-2 text-sm font-normal text-emerald-50/70 file:mr-3 file:rounded-full file:border-0 file:bg-[#F59E0B] file:px-3 file:py-2 file:text-[#065F46] file:font-semibold"
                                     />
+                                    </label>
+                                    {slipPreview && <img src={slipPreview} alt={lang === 'my' ? 'ငွေလွှဲပြေစာ preview' : 'Payment slip preview'} className="h-40 w-full rounded-xl object-contain bg-white/10 p-2" />}
                                     <p className="-mt-2 text-xs text-emerald-50/70">{lang === 'my' ? 'ငွေလွှဲပြေစာပုံ (JPG, PNG, WEBP; 4 MB အထိ) ထည့်ပါ။' : 'Upload your payment slip (JPG, PNG, WEBP; up to 4 MB).'}</p>
                                     <button type="submit" className="w-full rounded-full bg-[#F59E0B] px-4 py-3 text-base font-bold text-[#065F46] hover:bg-amber-400" disabled={donationForm.processing}>
                                         {donationForm.processing ? (lang === 'my' ? 'တင်သွင်းနေသည်...' : 'Submitting...') : (lang === 'my' ? 'လှူဒါန်းမှုတင်သွင်းရန်' : 'Submit donation')}
@@ -262,7 +309,7 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                                     <button
                                         type="button"
                                         onClick={() => setStep((current) => Math.min(3, current + 1))}
-                                        disabled={(step === 1 && fundPools.length === 0) || (step === 2 && !paymentDetails[selectedPayment])}
+                                        disabled={(step === 1 && (fundPools.length === 0 || Number(selectedAmount) < 1000)) || (step === 2 && !paymentDetails[selectedPayment])}
                                         className="inline-flex items-center gap-2 rounded-full bg-[#F59E0B] px-4 py-2 text-sm font-semibold text-[#065F46] hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         {lang === 'my' ? 'ဆက်လုပ်မည်' : 'Next'} <ArrowRight className="h-4 w-4" />
@@ -294,8 +341,9 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
             {showSuccess && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
                     <div className="w-full max-w-md rounded-3xl bg-white p-6 text-center shadow-2xl">
-                        <h2 className="text-2xl font-black text-slate-900">Donation submitted</h2>
-                        <p className="mt-3 text-sm text-slate-600">Thank you. Your donation has been submitted for review.</p>
+                        <h2 className="text-2xl font-black text-slate-900">{lang === 'my' ? 'လှူဒါန်းမှု လက်ခံရရှိပါပြီ' : 'Donation submitted'}</h2>
+                        <p className="mt-3 text-sm text-slate-600">{lang === 'my' ? 'အဖွဲ့မှ စစ်ဆေးပြီးနောက် အခြေအနေကို update ပြုလုပ်ပါမည်။' : 'Thank you. Your donation has been submitted for review.'}</p>
+                        {submittedReceipt?.tracking_token && <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-left"><p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">{lang === 'my' ? 'လှူဒါန်းမှုအမှတ်' : 'Tracking ID'}</p><p className="mt-1 break-all font-mono text-sm font-bold text-slate-900">{submittedReceipt.tracking_token}</p></div>}
                         <button type="button" onClick={() => setShowSuccess(false)} className="mt-5 rounded-full bg-[#F59E0B] px-5 py-2 text-sm font-bold text-[#065F46]">OK</button>
                     </div>
                 </div>

@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Donation;
 use App\Models\FundPool;
 use App\Models\OutreachTrip;
+use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class HomeController extends Controller
@@ -23,6 +25,7 @@ class HomeController extends Controller
 
         return Inertia::render('Donate', [
             'fundPools' => $data['fundPools'],
+            'paymentDetails' => $data['paymentDetails'],
         ]);
     }
 
@@ -62,6 +65,21 @@ class HomeController extends Controller
             ->orderByDesc('total_raised')
             ->get();
 
+        $paymentDetails = PaymentMethod::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->mapWithKeys(fn (PaymentMethod $method): array => [
+                $method->name => [
+                    'label' => $method->account_name ?: $method->name,
+                    'phone' => $method->account_number,
+                    'account_name' => $method->account_name,
+                    'qr_url' => $method->qr_image_path ? Storage::disk('public')->url($method->qr_image_path) : null,
+                ],
+            ])
+            ->all();
+
         $recentDonations = Donation::query()
             ->where('status', 'approved')
             ->with('fundPool')
@@ -88,6 +106,7 @@ class HomeController extends Controller
                 'townships_reached' => (int) ($impact->townships_reached ?? 0),
             ],
             'fundPools' => $fundPools,
+            'paymentDetails' => $paymentDetails,
             'recentDonations' => $recentDonations,
             'recentTrips' => $recentTrips,
             'financialSummary' => $financialSummary,

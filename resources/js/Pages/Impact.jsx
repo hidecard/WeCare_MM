@@ -79,7 +79,7 @@ export default function Impact({ impact = {}, financialSummary = {}, recentTrips
                     </div>
 
                     <section className="mt-10 rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-100">
-                        <h2 className="text-2xl font-black text-slate-900">{lang === 'my' ? 'မကြာမီရောက်ရှိလာမည့် စစ်ဆင်မှုများ' : 'Recent outreach activity'}</h2>
+                        <h2 className="text-2xl font-black text-slate-900">{lang === 'my' ? 'မကြာသေးမီက ပြုလုပ်ခဲ့သော ကူညီမှုများ' : 'Recent outreach activity'}</h2>
                         <div className="mt-6 space-y-4">
                             {recentTrips.map((trip) => (
                                 <div key={trip.id} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4">

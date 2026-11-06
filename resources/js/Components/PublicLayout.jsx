@@ -5,18 +5,18 @@ import DonationStatusTracker from './DonationStatusTracker';
 
 const navByLang = {
     my: [
-        { label: 'မူလ', href: route('home') },
-        { label: 'လှူဒါန်း', href: route('donate') },
-        { label: 'အကျိုးသက်ရောက်မှု', href: route('impact') },
-        { label: 'လမ်းဘေးစစ်ဆင်မှု', href: route('outreach') },
-        { label: 'အသိုက်အဝန်း', href: route('community') },
+        { key: 'home', label: 'မူလ', href: route('home') },
+        { key: 'donate', label: 'လှူဒါန်း', href: route('donate') },
+        { key: 'impact', label: 'အကျိုးသက်ရောက်မှု', href: route('impact') },
+        { key: 'outreach', label: 'လမ်းဘေးစစ်ဆင်မှု', href: route('outreach') },
+        { key: 'community', label: 'အသိုက်အဝန်း', href: route('community') },
     ],
     en: [
-        { label: 'Home', href: route('home') },
-        { label: 'Donate', href: route('donate') },
-        { label: 'Impact', href: route('impact') },
-        { label: 'Outreach', href: route('outreach') },
-        { label: 'Community', href: route('community') },
+        { key: 'home', label: 'Home', href: route('home') },
+        { key: 'donate', label: 'Donate', href: route('donate') },
+        { key: 'impact', label: 'Impact', href: route('impact') },
+        { key: 'outreach', label: 'Outreach', href: route('outreach') },
+        { key: 'community', label: 'Community', href: route('community') },
     ],
 };
 
@@ -40,11 +40,12 @@ export default function PublicLayout({ children, active = 'home', lang = 'my', s
 
                     <nav className="hidden items-center gap-4 md:flex">
                         {navItems.map((item) => {
-                            const isActive = active.toLowerCase() === item.label.toLowerCase() || active === item.href;
+                            const isActive = active === item.key;
                             return (
                                 <Link
                                     key={item.href}
                                     href={item.href}
+                                    aria-current={isActive ? 'page' : undefined}
                                     className={`text-sm transition ${isActive ? 'font-semibold text-white' : 'text-emerald-50/80 hover:text-white'}`}
                                 >
                                     {item.label}
@@ -67,7 +68,9 @@ export default function PublicLayout({ children, active = 'home', lang = 'my', s
                             type="button"
                             className="inline-flex rounded-full border border-white/15 bg-white/10 p-2 text-white md:hidden"
                             onClick={() => setMobileOpen((current) => !current)}
-                            aria-label="Toggle menu"
+                            aria-label={lang === 'my' ? 'မီနူးဖွင့်ရန်' : 'Toggle menu'}
+                            aria-expanded={mobileOpen}
+                            aria-controls="mobile-navigation"
                         >
                             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                         </button>
@@ -75,13 +78,14 @@ export default function PublicLayout({ children, active = 'home', lang = 'my', s
                 </div>
 
                 {mobileOpen && (
-                    <div className="border-t border-white/10 bg-[#065F46] px-4 py-3 md:hidden">
+                    <div id="mobile-navigation" className="border-t border-white/10 bg-[#065F46] px-4 py-3 md:hidden">
                         <div className="flex flex-col gap-2">
                             {navItems.map((item) => (
                                 <Link
                                     key={item.href}
                                     href={item.href}
-                                    className="rounded-lg px-3 py-2 text-sm text-emerald-50/90 hover:bg-white/10"
+                                    aria-current={active === item.key ? 'page' : undefined}
+                                    className={`rounded-lg px-3 py-2 text-sm hover:bg-white/10 ${active === item.key ? 'bg-white/10 font-semibold text-white' : 'text-emerald-50/90'}`}
                                     onClick={() => setMobileOpen(false)}
                                 >
                                     {item.label}
@@ -94,6 +98,15 @@ export default function PublicLayout({ children, active = 'home', lang = 'my', s
 
             <DonationStatusTracker lang={lang} />
             {children}
+
+            {active !== 'donate' && (
+                <Link
+                    href={route('donate')}
+                    className="fixed inset-x-4 bottom-4 z-30 inline-flex items-center justify-center rounded-full bg-[#F59E0B] px-5 py-3 text-sm font-bold text-[#065F46] shadow-lg shadow-amber-900/20 sm:hidden"
+                >
+                    {lang === 'my' ? 'လှူဒါန်းမည်' : 'Donate now'}
+                </Link>
+            )}
 
             <footer className="border-t border-emerald-100 bg-[#065F46] text-white">
                 <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1.2fr_0.8fr_0.8fr] lg:px-8">

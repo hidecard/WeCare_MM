@@ -5,12 +5,6 @@ import PublicLayout from '../Components/PublicLayout';
 import useLanguage from '../hooks/useLanguage';
 
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
-const fallbackTripPhotos = [
-    'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1200&q=80',
-];
-
 const formatDisplayDate = (value) => {
     if (!value) return '—';
 
@@ -78,7 +72,7 @@ export default function Outreach({ recentTrips = [] }) {
                             const tripPhotos = Array.isArray(trip.photos_json)
                                 ? trip.photos_json.filter((photo) => typeof photo === 'string' && photo.trim())
                                 : [];
-                            const galleryImages = tripPhotos.length > 0 ? tripPhotos : fallbackTripPhotos;
+                            const galleryImages = tripPhotos;
 
                             return (
                                 <article key={trip.id} className="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-100">
