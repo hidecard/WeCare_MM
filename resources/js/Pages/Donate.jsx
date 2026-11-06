@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, CreditCard, HandCoins, Landmark, ShieldCheck } f
 import { useState } from 'react';
 import PublicLayout from '../Components/PublicLayout';
 import useLanguage from '../hooks/useLanguage';
+import { saveDonationReceipt } from '../lib/donationReceipts';
 
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
 
@@ -45,7 +46,8 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
         event.preventDefault();
         donationForm.post(route('donations.store'), {
             forceFormData: true,
-            onSuccess: () => {
+            onSuccess: (page) => {
+                saveDonationReceipt(page.props.flash?.donation_receipt);
                 donationForm.reset();
                 setStep(1);
                 setShowSuccess(true);

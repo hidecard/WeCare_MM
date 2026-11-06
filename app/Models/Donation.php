@@ -9,6 +9,8 @@ class Donation extends Model
 {
     use HasFactory;
 
+    protected $hidden = ['tracking_token'];
+
     protected $fillable = [
         'fund_pool_id',
         'donor_name',
@@ -20,6 +22,7 @@ class Donation extends Model
         'wish_note',
         'status',
         'certificate_code',
+        'tracking_token',
         'approved_at',
     ];
 

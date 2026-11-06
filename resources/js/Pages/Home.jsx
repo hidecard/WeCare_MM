@@ -3,6 +3,7 @@ import { ArrowRight, BadgeCheck, Building2, HandCoins, HeartHandshake, MapPinned
 import { useEffect, useState } from 'react';
 import PublicLayout from '../Components/PublicLayout';
 import useLanguage from '../hooks/useLanguage';
+import { saveDonationReceipt } from '../lib/donationReceipts';
 
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
 const numberFormat = new Intl.NumberFormat('en-MM');
@@ -144,7 +145,8 @@ export default function Home({ impact = {}, fundPools = [], recentDonations = []
         event.preventDefault();
         donationForm.post(route('donations.store'), {
             forceFormData: true,
-            onSuccess: () => {
+            onSuccess: (page) => {
+                saveDonationReceipt(page.props.flash?.donation_receipt);
                 setShowSuccessModal(true);
                 donationForm.reset();
                 setStep(1);

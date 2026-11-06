@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { Globe, HeartHandshake, Menu, X } from 'lucide-react';
 import { useState } from 'react';
+import DonationStatusTracker from './DonationStatusTracker';
 
 const navByLang = {
     my: [
@@ -91,6 +92,7 @@ export default function PublicLayout({ children, active = 'home', lang = 'my', s
                 )}
             </header>
 
+            <DonationStatusTracker lang={lang} />
             {children}
 
             <footer className="border-t border-emerald-100 bg-[#065F46] text-white">
