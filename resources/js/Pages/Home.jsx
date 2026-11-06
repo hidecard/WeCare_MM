@@ -3,6 +3,7 @@ import { ArrowRight, BadgeCheck, Building2, HeartHandshake, MapPinned, Phone, So
 import { useEffect, useState } from 'react';
 import PublicLayout from '../Components/PublicLayout';
 import DonationFlow from '../Components/DonationFlow';
+import DonationFlowSteps from '../Components/DonationFlowSteps';
 import useLanguage from '../hooks/useLanguage';
 import { saveDonationReceipt } from '../lib/donationReceipts';
 
@@ -59,6 +60,8 @@ export default function Home({ impact = {}, fundPools = [], recentDonations = []
     const [selectedTrip, setSelectedTrip] = useState(null);
     const [tripPage, setTripPage] = useState(1);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [slipPreview, setSlipPreview] = useState('');
+    const [slipError, setSlipError] = useState('');
 
     const selectedPool = fundPools.find((pool) => Number(pool.id) === Number(selectedPoolId)) ?? fundPools[0] ?? {};
     const estimatedPeople = Math.max(1, Math.round((Number(selectedAmount) || 0) / Math.max(Number(selectedPool.unit_cost) || 5000, 1)));
@@ -134,6 +137,21 @@ export default function Home({ impact = {}, fundPools = [], recentDonations = []
     const handlePaymentSelect = (method) => {
         setSelectedPayment(method);
         donationForm.setData('payment_method', method);
+    };
+
+    const handleSlipChange = (event) => {
+        const file = event.target.files?.[0];
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (file && (!allowedTypes.includes(file.type) || file.size > 4 * 1024 * 1024)) {
+            event.target.value = '';
+            donationForm.setData('slip_image', null);
+            setSlipPreview('');
+            setSlipError(lang === 'my' ? 'JPG, PNG, WEBP ဖိုင်နှင့် 4 MB အောက်သာ တင်နိုင်ပါသည်။' : 'Please upload a JPG, PNG, or WEBP image under 4 MB.');
+            return;
+        }
+        donationForm.setData('slip_image', file || null);
+        setSlipPreview(file ? URL.createObjectURL(file) : '');
+        setSlipError('');
     };
 
     useEffect(() => {
@@ -308,92 +326,20 @@ export default function Home({ impact = {}, fundPools = [], recentDonations = []
                                 </div>
                             )}
 
-                            {step === 2 && (
-                                <div className="mt-6 space-y-4">
-                                    {Object.entries(paymentDetails).map(([method, details]) => (
-                                        <button
-                                            key={method}
-                                            type="button"
-                                            onClick={() => handlePaymentSelect(method)}
-                                            className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left ${selectedPayment === method ? 'border-[#F59E0B] bg-[#F59E0B]/10' : 'border-white/10 bg-white/5'}`}
-                                        >
-                                                <div>
-                                                    <p className="font-semibold text-white">{method}</p>
-                                                    <p className="text-xs text-emerald-50/80">{details.label}</p>
-                                                    {details.qr_url && <img src={details.qr_url} alt={`${method} QR`} className="mt-2 h-20 w-20 rounded-lg bg-white object-contain p-1" />}
-                                                </div>
-                                            <span className="rounded-full bg-white/10 px-2 py-1 text-xs font-medium">{details.phone}</span>
-                                        </button>
-                                    ))}
-                                    {Object.keys(paymentDetails).length === 0 && (
-                                        <p role="alert" className="rounded-xl bg-amber-100 p-3 text-sm font-semibold text-amber-900">
-                                            {lang === 'my' ? 'ငွေပေးချေမှုနည်းလမ်း မသတ်မှတ်ရသေးပါ။ အုပ်ချုပ်သူထံ ဆက်သွယ်ပါ။' : 'No payment methods are configured yet. Please contact the administrator.'}
-                                        </p>
-                                    )}
-                                    <div className="rounded-2xl bg-white/5 p-4">
-                                        <p className="font-semibold text-emerald-50">{selectedPayment}</p>
-                                        <p className="mt-2 text-sm text-emerald-50/80">{paymentDetails[selectedPayment]?.phone}</p>
-                                        <button type="button" onClick={() => copyPaymentNumber(selectedPayment)} className="mt-3 rounded-full bg-[#F59E0B] px-3 py-2 text-sm font-semibold text-[#065F46]">
-                                            {copiedNumber === selectedPayment ? (lang === 'my' ? 'ကူးယူပြီး' : 'Copied') : (lang === 'my' ? 'ဖုန်းနံပါတ်ကူးယူရန်' : 'Copy number')}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {step === 3 && (
-                                <form onSubmit={handleDonationSubmit} className="mt-6 space-y-4">
-                                    {Object.keys(donationForm.errors).length > 0 && (
-                                        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
-                                            {Object.entries(donationForm.errors).map(([field, message]) => (
-                                                <p key={field}>{message}</p>
-                                            ))}
-                                        </div>
-                                    )}
-                                    <div className="grid gap-3 sm:grid-cols-2">
-                                        <input
-                                            type="text"
-                                            value={donationForm.data.donor_name}
-                                            onChange={(e) => donationForm.setData('donor_name', e.target.value)}
-                                            placeholder={lang === 'my' ? 'လှူဒါန်းသူအမည်' : 'Donor name'}
-                                            className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-emerald-50/60 outline-none focus:border-[#F59E0B]"
-                                        />
-                                        <input
-                                            type="tel"
-                                            value={donationForm.data.phone}
-                                            onChange={(e) => donationForm.setData('phone', e.target.value)}
-                                            placeholder={lang === 'my' ? 'ဖုန်းနံပါတ်' : 'Phone number'}
-                                            className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-emerald-50/60 outline-none focus:border-[#F59E0B]"
-                                        />
-                                    </div>
-                                    <label className="flex items-center gap-2 text-sm text-emerald-50/90">
-                                        <input
-                                            type="checkbox"
-                                            checked={donationForm.data.is_anonymous}
-                                            onChange={(e) => donationForm.setData('is_anonymous', e.target.checked)}
-                                            className="h-4 w-4 rounded border-white/20 bg-white/5 accent-amber-400"
-                                        />
-                                        {lang === 'my' ? 'အမည်မဖော်ပြဘဲ လှူဒါန်းမည်' : 'Donate anonymously'}
-                                    </label>
-                                    <textarea
-                                        value={donationForm.data.wish_note}
-                                        onChange={(e) => donationForm.setData('wish_note', e.target.value)}
-                                        rows="3"
-                                        placeholder={lang === 'my' ? 'မေတ္တာစာ / အကြံပြုချက်' : 'Wish note or encouragement'}
-                                        className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-emerald-50/60 outline-none focus:border-[#F59E0B]"
-                                    />
-                                    <input
-                                        type="file"
-                                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-                                        required
-                                        onChange={(e) => donationForm.setData('slip_image', e.target.files[0])}
-                                        className="block w-full rounded-xl border border-dashed border-white/15 bg-white/5 px-3 py-2 text-sm text-emerald-50/70 file:mr-3 file:rounded-full file:border-0 file:bg-[#F59E0B] file:px-3 file:py-2 file:text-[#065F46] file:font-semibold"
-                                    />
-                                    <p className="-mt-2 text-xs text-emerald-50/70">{lang === 'my' ? 'ငွေလွှဲပြေစာပုံ (JPG, PNG, WEBP; 4 MB အထိ) ထည့်ပါ။' : 'Upload your payment slip (JPG, PNG, WEBP; up to 4 MB).'}</p>
-                                    <button type="submit" className="w-full rounded-full bg-[#F59E0B] px-4 py-3 text-base font-bold text-[#065F46] hover:bg-amber-400" disabled={donationForm.processing}>
-                                        {donationForm.processing ? (lang === 'my' ? 'တင်သွင်းနေသည်...' : 'Submitting...') : (lang === 'my' ? 'လှူဒါန်းမှုတင်သွင်းရန်' : 'Submit donation')}
-                                    </button>
-                                </form>
-                            )}
+                            <DonationFlowSteps
+                                step={step}
+                                lang={lang}
+                                paymentDetails={paymentDetails}
+                                selectedPayment={selectedPayment}
+                                onPaymentSelect={handlePaymentSelect}
+                                onCopyPaymentNumber={copyPaymentNumber}
+                                copiedPayment={copiedNumber === selectedPayment}
+                                donationForm={donationForm}
+                                onSubmit={handleDonationSubmit}
+                                onSlipChange={handleSlipChange}
+                                slipPreview={slipPreview}
+                                slipError={slipError}
+                            />
 
                             <div className="mt-6 flex justify-between gap-3">
                                 <button

@@ -40,7 +40,7 @@
 - [x] Add mobile-friendly filters for outreach activity by township and month, including a clear-filters action and empty state.
 - [x] Add loading, offline/error, and retry states to public forms and status checks.
 - [x] Extract the shared fund-pool and amount selector into a reusable DonationFlow component used by Home and Donate.
-- [ ] Move the remaining payment, donor-details, slip-upload, and submit-step logic into DonationFlow without changing the current donation behavior.
+- [x] Move the shared payment, donor-details, slip-upload, and submit-step logic into DonationFlowSteps used by Home and Donate without changing the donation endpoint behavior.
 
 ## P0 — Before production
 
