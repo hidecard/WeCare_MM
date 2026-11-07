@@ -70,3 +70,89 @@
 - [x] Add donor status lookup, receipt PDF, export reports, and public monthly impact reporting.
 - [x] Add backup/restore verification and deployment monitoring.
 - [x] Add bilingual Open Graph/Twitter share metadata and a 1200×630 WeCare Myanmar preview image to all public frontend pages.
+
+## Completed record — latest work
+
+- [x] Pull the latest remote production/features update and resolve the Outreach pagination merge conflict without dropping remote ledger/photo-gallery changes.
+- [x] Add server-side Outreach pagination with township/month query filters and ledger-aware trip totals.
+- [x] Add bilingual Open Graph/Twitter metadata to the shared Blade head and SPA SEO updater.
+- [x] Add the 1200×630 Burmese/English WeCare Myanmar social preview artwork in PNG/SVG formats.
+- [x] Run the frontend production build and `git diff --check` after the latest UI/SEO changes.
+- [x] Run `npm audit --omit=dev`; no production dependency vulnerabilities were reported.
+
+## Next roadmap — donor trust, admin operations, and growth
+
+These are the next tasks requested after the Admin search/filter milestone. Keep each checkbox unchecked until the implementation is complete and verified in the live flow.
+
+### 1. Admin search and filters
+
+- [ ] Add donation search by tracking ID, donor phone, donor name, and payment method.
+- [ ] Add donation filters for pending/approved/rejected status, fund pool, date range, and amount range.
+- [ ] Add spot-report filters for township, status, urgency, assignee, and date range.
+- [ ] Add expense filters for category, reporting period, reviewer, linked outreach trip, and amount range.
+- [ ] Preserve filters in query strings and pagination links.
+- [ ] Add clear-filter buttons and mobile-friendly filter controls.
+- [ ] Add empty states and result counts for every admin filter view.
+
+### 2. Donation status timeline and donor experience
+
+- [ ] Redesign the donation status result as a clear Submitted → Under review → Approved/Rejected timeline.
+- [ ] Show submitted date, review date, reviewer note, and the next recommended action.
+- [ ] Add a clear 1–2 working-day review expectation for pending donations.
+- [ ] Add a review summary before final donation submission.
+- [ ] Add a confirmation checkbox for payment and donor information accuracy.
+- [ ] Add replace/remove controls for an uploaded payment slip before submit.
+- [ ] Improve tracking ID copy, success toast, certificate CTA, and loading states.
+- [ ] Test duplicate-click prevention and failed-upload retry behavior.
+
+### 3. Public trust and transparency
+
+- [ ] Add a “last updated” timestamp to public financial and impact summaries.
+- [ ] Show approved donations, active expenses, current balance, people helped, meals, medical aid, and townships reached with clear labels.
+- [ ] Add a public expense-category breakdown with a short methodology note.
+- [ ] Add a public explanation of manual payment review and donation approval timing.
+- [ ] Add a payment/account FAQ, including what to do after sending money to the wrong account.
+- [ ] Review outreach photo consent, beneficiary privacy, and EXIF/location metadata before publishing real images.
+
+### 4. Monthly impact reports
+
+- [ ] Add a public monthly impact report page using approved donation, expense, trip, and resolved-report data.
+- [ ] Add month selection with server-side query handling and shareable URLs.
+- [ ] Add downloadable PDF/monthly summary output.
+- [ ] Add a shareable 1200×630 impact image for each published month.
+- [ ] Add report data freshness and source notes so donors understand what is included.
+
+### 5. Notifications and communication
+
+- [ ] Verify queued notification delivery for donation received, approved, rejected, and certificate-ready events.
+- [ ] Add Burmese/English notification templates with the tracking ID and status link.
+- [ ] Add community report received, assigned, in-progress, and resolved notifications where contact permission exists.
+- [ ] Add queue failure logging and a safe retry policy.
+- [ ] Add an admin notification/failed-job visibility screen or operational checklist.
+
+### 6. PWA and mobile reliability
+
+- [ ] Add a web app manifest with WeCare Myanmar name, icons, theme color, and Burmese/English metadata.
+- [ ] Add an offline fallback for reading public pages without allowing offline donation submission.
+- [ ] Cache only safe static assets and never cache private slips, donor data, or admin responses.
+- [ ] Add installability checks for Android Chrome.
+- [ ] Test donation, payment-slip upload, QR viewing, status lookup, report photo upload, and gallery viewer on Android Chrome.
+- [ ] Test iOS Safari file upload, back navigation, modal behavior, and keyboard/focus behavior.
+
+### 7. Help center and support
+
+- [ ] Add a public Help/FAQ page with donation, payment slip, tracking, certificate, report, and volunteer questions.
+- [ ] Add verified support phone, email, Telegram, and Facebook contact links.
+- [ ] Add support hours and expected response time.
+- [ ] Add a “payment issue” and “wrong transfer” contact action.
+- [ ] Add bilingual FAQ content and accessible accordion behavior.
+
+### 8. Release verification
+
+- [ ] Confirm GitHub Actions CI passes PHP 8.4 setup, migrations, seed, Pest tests, and Vite build.
+- [ ] Take a production database backup before every destructive/schema-changing migration.
+- [ ] Run a full donor smoke test from public donation to admin review, status lookup, notification, and certificate download.
+- [ ] Run social preview checks for Home, Donate, Impact, Outreach, and Community links.
+- [ ] Check Facebook/Telegram/LINE/WhatsApp preview image and bilingual copy after deployment.
+- [ ] Verify `APP_ENV=production`, `APP_DEBUG=false`, real `APP_KEY`, queue worker, scheduler, storage link, and rollback plan.
+- [ ] Record the deployment date, commit SHA, migration status, backup location, and smoke-test result in the release notes.
