@@ -73,6 +73,7 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
         donor_email: '',
         wish_note: '',
         slip_image: null,
+        information_confirmed: false,
     });
 
     const handlePoolSelect = (poolId) => {
@@ -262,7 +263,7 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                                 )}
                             </div>
 
-                            {step === 3 && <DonationFlowSteps
+                            {step === 2 && <DonationFlowSteps
                                 step={2}
                                 lang={lang}
                                 paymentDetails={paymentDetails}

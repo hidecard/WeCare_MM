@@ -22,10 +22,26 @@ class ExpenseController extends Controller
     {
         $showArchived = $request->boolean('archived');
 
+        $filters = $request->validate([
+            'fund_pool_id' => ['nullable', 'integer', 'exists:fund_pools,id'],
+            'category' => ['nullable', 'string', 'max:50'],
+            'reviewer_id' => ['nullable', 'integer', 'exists:users,id'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+            'amount_min' => ['nullable', 'numeric', 'min:0'],
+            'amount_max' => ['nullable', 'numeric', 'gte:amount_min'],
+        ]);
+
         $expenses = Expense::query()
             ->with(['fundPool:id,title_mm,title_en', 'reviewer:id,name'])
             ->when(! $showArchived, fn ($query) => $query->active())
-            ->when($request->filled('fund_pool_id'), fn ($query) => $query->where('fund_pool_id', $request->integer('fund_pool_id')))
+            ->when($filters['fund_pool_id'] ?? null, fn ($query, $poolId) => $query->where('fund_pool_id', $poolId))
+            ->when($filters['category'] ?? null, fn ($query, $category) => $query->where('category', $category))
+            ->when($filters['reviewer_id'] ?? null, fn ($query, $reviewerId) => $query->where('reviewer_id', $reviewerId))
+            ->when($filters['date_from'] ?? null, fn ($query, $date) => $query->whereDate('period_start', '>=', $date))
+            ->when($filters['date_to'] ?? null, fn ($query, $date) => $query->whereDate('period_end', '<=', $date))
+            ->when($filters['amount_min'] ?? null, fn ($query, $amount) => $query->where('amount', '>=', $amount))
+            ->when($filters['amount_max'] ?? null, fn ($query, $amount) => $query->where('amount', '<=', $amount))
             ->latest()
             ->paginate(15)
             ->withQueryString();
@@ -36,6 +52,7 @@ class ExpenseController extends Controller
             'reviewers' => User::query()->where('role', 'admin')->orderBy('name')->get(['id', 'name']),
             'categories' => Expense::CATEGORIES,
             'filters' => [
+                ...$filters,
                 'fund_pool_id' => $request->input('fund_pool_id', ''),
                 'archived' => $showArchived,
             ],

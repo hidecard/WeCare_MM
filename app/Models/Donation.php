@@ -23,6 +23,7 @@ class Donation extends Model
         'wish_note',
         'status',
         'review_note',
+        'reviewed_at',
         'certificate_code',
         'tracking_token',
         'approved_at',
@@ -32,6 +33,7 @@ class Donation extends Model
         'is_anonymous' => 'boolean',
         'amount' => 'decimal:2',
         'approved_at' => 'datetime',
+        'reviewed_at' => 'datetime',
     ];
 
     public function fundPool()

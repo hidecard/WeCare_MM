@@ -35,6 +35,7 @@ class StoreDonationRequest extends FormRequest
             'is_anonymous' => ['nullable', 'boolean'],
             'wish_note' => ['nullable', 'string', 'max:1000'],
             'slip_image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'information_confirmed' => ['accepted'],
         ];
     }
 }

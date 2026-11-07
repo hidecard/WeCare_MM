@@ -48,20 +48,37 @@ class DashboardController extends Controller
     public function donationListIndex(Request $request)
     {
         $query = Donation::query()->with('fundPool')->latest();
-        $query->when($request->filled('status') && $request->input('status') !== 'all', fn ($builder) => $builder->where('status', $request->input('status')));
-        $query->when($request->filled('payment_method') && $request->input('payment_method') !== 'all', fn ($builder) => $builder->where('payment_method', $request->input('payment_method')));
-        $query->when($request->filled('search'), function ($builder) use ($request): void {
-            $search = $request->string('search')->toString();
+        $filters = $request->validate([
+            'status' => ['nullable', 'in:all,pending,approved,rejected'],
+            'payment_method' => ['nullable', 'string', 'max:255'],
+            'fund_pool_id' => ['nullable', 'integer', 'exists:fund_pools,id'],
+            'search' => ['nullable', 'string', 'max:255'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+            'amount_min' => ['nullable', 'numeric', 'min:0'],
+            'amount_max' => ['nullable', 'numeric', 'gte:amount_min'],
+        ]);
+        $query->when(($filters['status'] ?? null) && ($filters['status'] ?? null) !== 'all', fn ($builder) => $builder->where('status', $filters['status']));
+        $query->when(($filters['payment_method'] ?? null) && ($filters['payment_method'] ?? null) !== 'all', fn ($builder) => $builder->where('payment_method', $filters['payment_method']));
+        $query->when($filters['fund_pool_id'] ?? null, fn ($builder, $poolId) => $builder->where('fund_pool_id', $poolId));
+        $query->when($filters['date_from'] ?? null, fn ($builder, $date) => $builder->whereDate('created_at', '>=', $date));
+        $query->when($filters['date_to'] ?? null, fn ($builder, $date) => $builder->whereDate('created_at', '<=', $date));
+        $query->when($filters['amount_min'] ?? null, fn ($builder, $amount) => $builder->where('amount', '>=', $amount));
+        $query->when($filters['amount_max'] ?? null, fn ($builder, $amount) => $builder->where('amount', '<=', $amount));
+        $query->when($filters['search'] ?? null, function ($builder, $search): void {
             $builder->where(function ($nested) use ($search): void {
                 $nested->where('donor_name', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('certificate_code', 'like', "%{$search}%");
+                    ->orWhere('certificate_code', 'like', "%{$search}%")
+                    ->orWhere('tracking_token', 'like', "%{$search}%")
+                    ->orWhere('payment_method', 'like', "%{$search}%");
             });
         });
 
         return Inertia::render('Admin/DonationList', [
             'donations' => $query->paginate(15)->withQueryString(),
-            'filters' => $request->only(['status', 'payment_method', 'search']),
+            'filters' => $filters,
+            'fundPools' => FundPool::query()->orderBy('title_en')->get(['id', 'title_mm', 'title_en']),
             'paymentMethods' => Donation::query()->select('payment_method')->distinct()->orderBy('payment_method')->pluck('payment_method'),
             'summary' => [
                 'total' => Donation::query()->count(),
@@ -91,10 +108,28 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function spotReportsIndex()
+    public function spotReportsIndex(Request $request)
     {
+        $filters = $request->validate([
+            'township' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', 'in:all,unread,checked,in_progress,resolved'],
+            'urgency' => ['nullable', 'in:all,low,normal,high,urgent'],
+            'assigned_to' => ['nullable', 'string', 'max:255'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+        ]);
+        $query = SpotReport::query()->latest()
+            ->when($filters['township'] ?? null, fn ($builder, $township) => $builder->where('township', $township))
+            ->when(($filters['status'] ?? null) && $filters['status'] !== 'all', fn ($builder) => $builder->where('status', $filters['status']))
+            ->when(($filters['urgency'] ?? null) && $filters['urgency'] !== 'all', fn ($builder) => $builder->where('urgency', $filters['urgency']))
+            ->when($filters['assigned_to'] ?? null, fn ($builder, $assignedTo) => $builder->where('assigned_to', 'like', "%{$assignedTo}%"))
+            ->when($filters['date_from'] ?? null, fn ($builder, $date) => $builder->whereDate('created_at', '>=', $date))
+            ->when($filters['date_to'] ?? null, fn ($builder, $date) => $builder->whereDate('created_at', '<=', $date));
+
         return Inertia::render('Admin/Reports', [
-            'spotReports' => SpotReport::query()->latest()->paginate(10),
+            'spotReports' => $query->paginate(10)->withQueryString(),
+            'filters' => $filters,
+            'townships' => SpotReport::query()->select('township')->distinct()->orderBy('township')->pluck('township')->values(),
         ]);
     }
 
@@ -301,6 +336,7 @@ class DashboardController extends Controller
 
             $lockedDonation->status = $status;
             $lockedDonation->review_note = $reviewNote;
+            $lockedDonation->reviewed_at = now();
             $lockedDonation->save();
 
             return true;

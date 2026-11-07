@@ -86,24 +86,25 @@ These are the next tasks requested after the Admin search/filter milestone. Keep
 
 ### 1. Admin search and filters
 
-- [ ] Add donation search by tracking ID, donor phone, donor name, and payment method.
-- [ ] Add donation filters for pending/approved/rejected status, fund pool, date range, and amount range.
-- [ ] Add spot-report filters for township, status, urgency, assignee, and date range.
+- [x] Add donation search by tracking ID, donor phone, donor name, and payment method to the admin donation list backend.
+- [x] Add donation filter query support for pending/approved/rejected status, fund pool, date range, and amount range.
+- [x] Add spot-report filter query support for township, status, urgency, assignee, and date range.
 - [ ] Add expense filters for category, reporting period, reviewer, linked outreach trip, and amount range.
-- [ ] Preserve filters in query strings and pagination links.
-- [ ] Add clear-filter buttons and mobile-friendly filter controls.
+- [x] Preserve filters in query strings and pagination links.
+- [x] Add clear-filter buttons and mobile-friendly filter controls.
 - [ ] Add empty states and result counts for every admin filter view.
 
 ### 2. Donation status timeline and donor experience
 
-- [ ] Redesign the donation status result as a clear Submitted → Under review → Approved/Rejected timeline.
-- [ ] Show submitted date, review date, reviewer note, and the next recommended action.
-- [ ] Add a clear 1–2 working-day review expectation for pending donations.
-- [ ] Add a review summary before final donation submission.
-- [ ] Add a confirmation checkbox for payment and donor information accuracy.
+- [x] Add a reviewed_at timestamp and return submitted/reviewed/approved dates from the donation status API.
+- [x] Redesign the donation status result as a clear Submitted → Under review → Approved/Rejected timeline.
+- [x] Show submitted date, review date, reviewer note, and the decision date in the frontend timeline.
+- [x] Add a clear 1–2 working-day review expectation for pending donations.
+- [x] Add a review summary before final donation submission.
+- [x] Add a confirmation checkbox for payment and donor information accuracy.
 - [ ] Add replace/remove controls for an uploaded payment slip before submit.
-- [ ] Improve tracking ID copy, success toast, certificate CTA, and loading states.
-- [ ] Test duplicate-click prevention and failed-upload retry behavior.
+- [x] Improve tracking ID copy, success toast, certificate CTA, and loading states.
+- [x] Disable duplicate donation submission while processing and retain upload retry/error states.
 
 ### 3. Public trust and transparency
 

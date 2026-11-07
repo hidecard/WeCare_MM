@@ -67,6 +67,9 @@ class DonationController extends Controller
             'status' => $donation->status,
             'donor_name' => $donation->is_anonymous ? 'Anonymous donor' : $donation->donor_name,
             'amount' => (string) $donation->amount,
+            'submitted_at' => $donation->created_at?->toIso8601String(),
+            'reviewed_at' => $donation->reviewed_at?->toIso8601String(),
+            'approved_at' => $donation->approved_at?->toIso8601String(),
             'certificate_url' => $donation->status === 'approved' && $donation->certificate_code
                 ? route('donations.certificate', [
                     'donation' => $donation->id,

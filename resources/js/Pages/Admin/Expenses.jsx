@@ -79,6 +79,12 @@ export default function Expenses({ expenses = {}, fundPools = [], reviewers = []
         const data = new FormData(event.currentTarget);
         router.get(route('admin.expenses.index'), {
             fund_pool_id: data.get('fund_pool_id') || undefined,
+            category: data.get('category') || undefined,
+            reviewer_id: data.get('reviewer_id') || undefined,
+            date_from: data.get('date_from') || undefined,
+            date_to: data.get('date_to') || undefined,
+            amount_min: data.get('amount_min') || undefined,
+            amount_max: data.get('amount_max') || undefined,
             archived: data.get('archived') ? 1 : undefined,
         }, { preserveState: true, preserveScroll: true });
     };
@@ -181,18 +187,28 @@ export default function Expenses({ expenses = {}, fundPools = [], reviewers = []
                     </div>
                     <button type="button" onClick={() => { form.reset(); setEditingId(null); setOpen(true); }} className="inline-flex items-center gap-2 rounded-full bg-[#F59E0B] px-4 py-2 text-xs font-bold text-[#065F46]"><Plus className="h-4 w-4" />Add expense</button>
                 </div>
-                <form onSubmit={applyFilters} className="mb-4 flex flex-wrap items-end gap-3">
+                <form onSubmit={applyFilters} className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <label className="block text-xs font-semibold text-slate-600">Fund pool
                         <select name="fund_pool_id" defaultValue={filters.fund_pool_id ?? ''} className="mt-1 block rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
                             <option value="">All pools</option>
                             {fundPools.map((pool) => <option key={pool.id} value={pool.id}>{pool.title_mm || pool.title_en}</option>)}
                         </select>
                     </label>
+                    <label className="block text-xs font-semibold text-slate-600">Category
+                        <select name="category" defaultValue={filters.category ?? ''} className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"><option value="">All categories</option>{categories.map((category) => <option key={category} value={category}>{categoryLabels[category] || category}</option>)}</select>
+                    </label>
+                    <label className="block text-xs font-semibold text-slate-600">Reviewer
+                        <select name="reviewer_id" defaultValue={filters.reviewer_id ?? ''} className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"><option value="">All reviewers</option>{reviewers.map((reviewer) => <option key={reviewer.id} value={reviewer.id}>{reviewer.name}</option>)}</select>
+                    </label>
+                    <label className="block text-xs font-semibold text-slate-600">Date from<input name="date_from" type="date" defaultValue={filters.date_from ?? ''} className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" /></label>
+                    <label className="block text-xs font-semibold text-slate-600">Date to<input name="date_to" type="date" defaultValue={filters.date_to ?? ''} className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" /></label>
+                    <label className="block text-xs font-semibold text-slate-600">Min MMK<input name="amount_min" type="number" min="0" defaultValue={filters.amount_min ?? ''} className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" /></label>
+                    <label className="block text-xs font-semibold text-slate-600">Max MMK<input name="amount_max" type="number" min="0" defaultValue={filters.amount_max ?? ''} className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" /></label>
                     <label className="flex items-center gap-2 pb-2 text-sm text-slate-700">
                         <input type="checkbox" name="archived" value="1" defaultChecked={Boolean(filters.archived)} className="h-4 w-4 rounded border-slate-300" />
                         Show archived
                     </label>
-                    <button type="submit" className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700">Apply</button>
+                    <div className="flex items-end gap-2"><button type="submit" className="rounded-full bg-[#065F46] px-4 py-2 text-xs font-bold text-white">Apply filters</button><button type="button" onClick={() => router.get(route('admin.expenses.index'), {}, { preserveState: true, preserveScroll: true })} className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700">Clear</button></div>
                 </form>
                 <div className="space-y-3 md:hidden">
                     {rows.length === 0 ? <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">No expenses recorded.</p> : rows.map((expense) => (

@@ -5,6 +5,12 @@ import PublicLayout from '../Components/PublicLayout';
 import useLanguage from '../hooks/useLanguage';
 
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
+const formatDateTime = (value, lang) => {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return new Intl.DateTimeFormat(lang === 'my' ? 'my-MM' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+};
 
 export default function DonationStatus() {
     const [lang, setLang] = useLanguage();
@@ -94,6 +100,11 @@ export default function DonationStatus() {
     const status = result?.status || 'pending';
     const StatusIcon = status === 'approved' ? CheckCircle2 : status === 'rejected' ? XCircle : Clock3;
     const statusTone = status === 'approved' ? 'bg-emerald-100 text-emerald-800' : status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800';
+    const timeline = [
+        { key: 'submitted', label: copy('တင်သွင်းပြီး', 'Submitted'), date: result?.submitted_at, complete: Boolean(result?.submitted_at) },
+        { key: 'review', label: copy('စစ်ဆေးနေဆဲ', 'Under review'), date: result?.reviewed_at, complete: Boolean(result?.reviewed_at) || status === 'pending' },
+        { key: 'decision', label: status === 'rejected' ? copy('အတည်မပြုနိုင်ပါ', 'Not approved') : copy('အတည်ပြုပြီး', 'Approved'), date: result?.approved_at || result?.reviewed_at, complete: status !== 'pending' },
+    ];
 
     return (
         <>
@@ -144,8 +155,16 @@ export default function DonationStatus() {
                                 <div className="rounded-2xl bg-emerald-50 p-4"><p className="text-xs text-emerald-700">{copy('လှူဒါန်းပမာဏ', 'Amount')}</p><p className="mt-1 text-xl font-black text-slate-900">{currency.format(Number(result.amount) || 0)}</p></div>
                                 <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs text-slate-600">{copy('လှူဒါန်းမှုအမှတ်', 'Tracking ID')}</p><p className="mt-1 break-all font-mono text-sm font-bold text-slate-900">{trackingToken.trim()}</p></div>
                             </div>
+                            <ol className="mt-6 grid gap-3 sm:grid-cols-3" aria-label={copy('လှူဒါန်းမှု အခြေအနေမှတ်တမ်း', 'Donation status timeline')}>
+                                {timeline.map((item, index) => (
+                                    <li key={item.key} className={`rounded-2xl border p-4 ${item.complete ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
+                                        <div className="flex items-center gap-2"><span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black ${item.complete ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500'}`}>{index + 1}</span><span className="text-sm font-bold text-slate-800">{item.label}</span></div>
+                                        {item.date && <p className="mt-2 text-xs text-slate-500">{formatDateTime(item.date, lang)}</p>}
+                                    </li>
+                                ))}
+                            </ol>
                             <p className="mt-5 text-base text-slate-600">
-                                {status === 'approved' ? copy('လှူဒါန်းမှုကို အတည်ပြုပြီးပါပြီ။ ကျေးဇူးတင်လွှာ ရရှိနိုင်ပါပြီ။', 'Your donation has been approved. Your appreciation certificate is available.') : status === 'rejected' ? copy('အသေးစိတ်အတွက် WeCare အဖွဲ့ကို ဆက်သွယ်ပါ။', 'Please contact the WeCare team for more details.') : copy('အဖွဲ့မှ ငွေလွှဲပြေစာကို စစ်ဆေးနေပါသည်။ စစ်ဆေးဆဲဖြစ်နေသရွေ့ ဤစာမျက်နှာက အခြေအနေကို ကိုယ်တိုင် ပြန်စစ်ပါမည်။', 'The team is reviewing your payment slip. This page keeps checking while the donation is under review.')}
+                                {status === 'approved' ? copy('လှူဒါန်းမှုကို အတည်ပြုပြီးပါပြီ။ ကျေးဇူးတင်လွှာ ရရှိနိုင်ပါပြီ။', 'Your donation has been approved. Your appreciation certificate is available.') : status === 'rejected' ? copy('အသေးစိတ်အတွက် WeCare အဖွဲ့ကို ဆက်သွယ်ပါ။', 'Please contact the WeCare team for more details.') : copy('အဖွဲ့မှ ငွေလွှဲပြေစာကို စစ်ဆေးနေပါသည်။ ပုံမှန်အားဖြင့် အလုပ်လုပ်ရက် ၁–၂ ရက်အတွင်း စစ်ဆေးပေးပါမည်။', 'The team is reviewing your payment slip. Reviews are usually completed within 1–2 working days.')}
                             </p>
                             {result.review_note && (
                                 <div className="mt-4 rounded-2xl bg-amber-50 p-4">
