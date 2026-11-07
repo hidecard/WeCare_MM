@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, CheckCircle2, Clock3, Search, XCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import PublicLayout from '../Components/PublicLayout';
 import useLanguage from '../hooks/useLanguage';
 
@@ -15,9 +15,7 @@ export default function DonationStatus() {
     const [lastLookup, setLastLookup] = useState('');
     const copy = (myanmar, english) => (lang === 'my' ? myanmar : english);
 
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-        const token = trackingToken.trim();
+    const lookup = async (token) => {
         if (!token) {
             setError(copy('လှူဒါန်းမှုအမှတ် ထည့်ပါ။', 'Enter your donation tracking ID.'));
             setResult(null);
@@ -48,6 +46,20 @@ export default function DonationStatus() {
         } finally {
             setProcessing(false);
         }
+    };
+
+    useEffect(() => {
+        const token = new URLSearchParams(window.location.search).get('token')?.trim();
+        if (!token) {
+            return;
+        }
+        setTrackingToken(token);
+        lookup(token);
+    }, []);
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        await lookup(trackingToken.trim());
     };
 
     const statusCopy = {
@@ -112,6 +124,12 @@ export default function DonationStatus() {
                             <p className="mt-5 text-sm text-slate-600">
                                 {status === 'approved' ? copy('လှူဒါန်းမှုကို အတည်ပြုပြီးပါပြီ။ ကျေးဇူးတင်လွှာ ရရှိနိုင်ပါပြီ။', 'Your donation has been approved. Your appreciation certificate is available.') : status === 'rejected' ? copy('အသေးစိတ်အတွက် WeCare အဖွဲ့ကို ဆက်သွယ်ပါ။', 'Please contact the WeCare team for more details.') : copy('အဖွဲ့မှ ငွေလွှဲပြေစာကို စစ်ဆေးနေပါသည်။ အတည်ပြုပြီးပါက ဤနေရာတွင် update ဖြစ်ပါမည်။', 'The team is reviewing your payment slip. This page will show the updated status after review.')}
                             </p>
+                            {result.review_note && (
+                                <div className="mt-4 rounded-2xl bg-amber-50 p-4">
+                                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-800">{copy('အဖွဲ့မှ မှတ်ချက်', 'Note from the team')}</p>
+                                    <p className="mt-2 text-sm text-slate-800">{result.review_note}</p>
+                                </div>
+                            )}
                             {result.certificate_url && <a href={result.certificate_url} target="_blank" rel="noreferrer" className="mt-5 inline-flex rounded-full bg-[#065F46] px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-800">{copy('Certificate ရယူရန်', 'Download certificate')}</a>}
                         </section>
                     )}

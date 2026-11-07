@@ -37,6 +37,7 @@ class DonationController extends Controller
             'donor_name' => $donorName,
             'is_anonymous' => (bool) ($validated['is_anonymous'] ?? false),
             'phone' => $validated['phone'] ?? null,
+            'donor_email' => $validated['donor_email'] ?? null,
             'amount' => $validated['amount'],
             'payment_method' => $validated['payment_method'],
             'slip_image_path' => $path,
@@ -72,6 +73,7 @@ class DonationController extends Controller
                     'certificateCode' => $donation->certificate_code,
                 ])
                 : null,
+            'review_note' => $donation->review_note,
         ]);
     }
 

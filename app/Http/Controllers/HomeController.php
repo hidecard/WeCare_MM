@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Donation;
+use App\Models\Expense;
 use App\Models\FundPool;
 use App\Models\OutreachTrip;
 use App\Models\PaymentMethod;
+use App\Models\SpotReport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -37,6 +40,7 @@ class HomeController extends Controller
             'impact' => $data['impact'],
             'financialSummary' => $data['financialSummary'],
             'recentTrips' => $data['recentTrips'],
+            'monthlySummary' => $data['monthlySummary'],
         ]);
     }
 
@@ -92,10 +96,17 @@ class HomeController extends Controller
             ->take(5)
             ->get();
 
+        $approvedAmount = (float) Donation::query()->where('status', 'approved')->sum('amount');
+        $expenseAmount = (float) Expense::query()->active()->sum('amount');
+
         $financialSummary = [
-            'total_received' => (float) Donation::query()->where('status', 'approved')->sum('amount'),
-            'total_spent' => (float) OutreachTrip::query()->sum('total_spent'),
-            'current_balance' => (float) Donation::query()->where('status', 'approved')->sum('amount') - (float) OutreachTrip::query()->sum('total_spent'),
+            'total_received' => $approvedAmount,
+            'total_spent' => $expenseAmount,
+            'current_balance' => $approvedAmount - $expenseAmount,
+            'approved_donations' => Donation::query()->where('status', 'approved')->count(),
+            'expense_count' => Expense::query()->active()->count(),
+            'outreach_trips' => OutreachTrip::query()->count(),
+            'resolved_reports' => SpotReport::query()->where('status', 'resolved')->count(),
         ];
 
         return [
@@ -110,6 +121,60 @@ class HomeController extends Controller
             'recentDonations' => $recentDonations,
             'recentTrips' => $recentTrips,
             'financialSummary' => $financialSummary,
+            'monthlySummary' => $this->monthlySummary(),
         ];
+    }
+
+    /**
+     * @return array<int, array{month: string, label: string, approved_amount: float, approved_count: int, expense_amount: float, trip_count: int, resolved_reports: int}>
+     */
+    protected function monthlySummary(): array
+    {
+        $months = collect(range(5, 0))->map(fn (int $offset): Carbon => now()->startOfMonth()->subMonths($offset));
+        $from = $months->first();
+
+        $donations = Donation::query()
+            ->where('status', 'approved')
+            ->where('approved_at', '>=', $from)
+            ->get(['approved_at', 'amount']);
+
+        $expenses = Expense::query()
+            ->active()
+            ->where(function ($query) use ($from): void {
+                $query->where('period_start', '>=', $from->toDateString())
+                    ->orWhere(function ($nested) use ($from): void {
+                        $nested->whereNull('period_start')->where('created_at', '>=', $from);
+                    });
+            })
+            ->get(['period_start', 'created_at', 'amount']);
+
+        $trips = OutreachTrip::query()
+            ->where('trip_date', '>=', $from->toDateString())
+            ->get(['trip_date']);
+
+        $reports = SpotReport::query()
+            ->where('status', 'resolved')
+            ->where('resolved_at', '>=', $from)
+            ->get(['resolved_at']);
+
+        return $months->map(function (Carbon $month) use ($donations, $expenses, $trips, $reports): array {
+            $key = $month->format('Y-m');
+            $approved = $donations->filter(fn (Donation $donation): bool => $donation->approved_at?->format('Y-m') === $key);
+            $monthExpenses = $expenses->filter(function (Expense $expense) use ($key): bool {
+                $date = $expense->period_start ?? $expense->created_at;
+
+                return $date?->format('Y-m') === $key;
+            });
+
+            return [
+                'month' => $key,
+                'label' => $month->format('M Y'),
+                'approved_amount' => (float) $approved->sum('amount'),
+                'approved_count' => $approved->count(),
+                'expense_amount' => (float) $monthExpenses->sum('amount'),
+                'trip_count' => $trips->filter(fn (OutreachTrip $trip): bool => $trip->trip_date?->format('Y-m') === $key)->count(),
+                'resolved_reports' => $reports->filter(fn (SpotReport $report): bool => $report->resolved_at?->format('Y-m') === $key)->count(),
+            ];
+        })->values()->all();
     }
 }

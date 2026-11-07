@@ -23,6 +23,7 @@ class StoreDonationRequest extends FormRequest
             ],
             'donor_name' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:255'],
+            'donor_email' => ['nullable', 'email', 'max:255'],
             'is_anonymous' => ['nullable', 'boolean'],
             'wish_note' => ['nullable', 'string', 'max:1000'],
             'slip_image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],

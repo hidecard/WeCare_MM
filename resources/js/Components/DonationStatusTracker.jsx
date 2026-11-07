@@ -67,11 +67,14 @@ export default function DonationStatusTracker({ lang = 'my' }) {
     const copy = lang === 'my'
         ? {
             heading: 'သင့်လှူဒါန်းမှုများ',
-            pending: 'Admin အတည်ပြုရန် စစ်ဆေးနေဆဲဖြစ်သည်။ အတည်ပြုပြီးပါက ကျေးဇူးတင်လွှာကို ဒီနေရာတွင် အလိုအလျောက်ရရှိပါမည်။',
-            approved: 'လှူဒါန်းမှုကို အတည်ပြုပြီးပါပြီ။ ကျေးဇူးတင်လွှာ Certificate ရရှိနိုင်ပါပြီ။',
+            pending: 'အက်ဒမင် စစ်ဆေးနေဆဲဖြစ်သည်။ အတည်ပြုပြီးပါက ကျေးဇူးတင်လွှာကို ဤနေရာတွင် အလိုအလျောက် ရရှိပါမည်။',
+            approved: 'လှူဒါန်းမှုကို အတည်ပြုပြီးပါပြီ။ ကျေးဇူးတင်လွှာ ရရှိနိုင်ပါပြီ။',
             rejected: 'ဤလှူဒါန်းမှုကို အတည်မပြုနိုင်ခဲ့ပါ။ အသေးစိတ်အတွက် WeCare အဖွဲ့ကို ဆက်သွယ်ပါ။',
-            certificate: 'Certificate ပုံ (PNG) ရယူရန်',
+            certificate: 'လက်မှတ်ပုံ (PNG) ရယူရန်',
             remove: 'ဖယ်ရှားရန်',
+            approvedLabel: 'အတည်ပြုပြီး',
+            rejectedLabel: 'အတည်မပြု',
+            pendingLabel: 'စစ်ဆေးဆဲ',
         }
         : {
             heading: 'Your donations',
@@ -80,6 +83,9 @@ export default function DonationStatusTracker({ lang = 'my' }) {
             rejected: 'This donation could not be approved. Please contact the WeCare team for details.',
             certificate: 'Download certificate image (PNG)',
             remove: 'Remove',
+            approvedLabel: 'Approved',
+            rejectedLabel: 'Not approved',
+            pendingLabel: 'Under review',
         };
 
     return (
@@ -90,7 +96,7 @@ export default function DonationStatusTracker({ lang = 'my' }) {
                         <div className="flex flex-wrap items-center gap-2">
                             <h2 className="font-bold text-slate-900">{copy.heading}</h2>
                             <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${receipt.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : receipt.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}`}>
-                                {receipt.status === 'approved' ? (lang === 'my' ? 'အတည်ပြုပြီး' : 'Approved') : receipt.status === 'rejected' ? (lang === 'my' ? 'အတည်မပြု' : 'Not approved') : (lang === 'my' ? 'စစ်ဆေးဆဲ' : 'Under review')}
+                                {receipt.status === 'approved' ? copy.approvedLabel : receipt.status === 'rejected' ? copy.rejectedLabel : copy.pendingLabel}
                             </span>
                         </div>
                         <p className="mt-1 text-sm font-semibold text-slate-700">{receipt.donor_name} · {currency.format(Number(receipt.amount) || 0)}</p>
@@ -98,11 +104,11 @@ export default function DonationStatusTracker({ lang = 'my' }) {
                     </div>
                     <div className="mt-3 flex shrink-0 items-center gap-2 sm:mt-0">
                         {receipt.status === 'approved' && receipt.certificate_url && (
-                            <a href={receipt.certificate_url} target="_blank" rel="noreferrer" className="rounded-full bg-[#065F46] px-4 py-2 text-center text-sm font-bold text-white hover:bg-emerald-800">
+                            <a href={receipt.certificate_url} target="_blank" rel="noreferrer" className="rounded-full bg-[#065F46] px-4 py-2 text-center text-sm font-bold text-white hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300">
                                 {copy.certificate}
                             </a>
                         )}
-                        <button type="button" onClick={() => removeDonationReceipt(receipt.tracking_token)} className="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-50">
+                        <button type="button" onClick={() => removeDonationReceipt(receipt.tracking_token)} className="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-200">
                             {copy.remove}
                         </button>
                     </div>

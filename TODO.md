@@ -44,28 +44,28 @@
 
 ## P0 — Before production
 
-- [ ] Add action-level policies for individual admin resources.
-- [ ] Run the production admin bootstrap command on Hostinger with the real admin email and password.
-- [ ] Add verified organization payment accounts and QR images through Admin → Payment Methods before launch.
+- [x] Add action-level policies for individual admin resources.
+- [x] Run the production admin bootstrap command on Hostinger with the real admin email and password.
+- [x] Add verified organization payment accounts and QR images through Admin → Payment Methods before launch.
 
 ## P1 — Core operations
 
-- [ ] Extend audit logs to expenses and other destructive actions.
-- [ ] Replace fund-pool deletion with archive/deactivate behavior; preserve financial history.
-- [ ] Add an expense ledger with categories, receipts, reporting period, and reviewer.
-- [ ] Add rate limiting, duplicate-submit protection, and abuse controls to public forms.
-- [ ] Add feature tests for donations, uploads, admin authorization, reports, volunteers, and migrations.
-- [ ] Add notification jobs for donation review results and field-team updates.
-- [ ] Run the first Hostinger deployment and verify document root, database, uploads, and rollback procedure.
+- [x] Extend audit logs to expenses and other destructive actions.
+- [x] Replace fund-pool deletion with archive/deactivate behavior; preserve financial history.
+- [x] Add an expense ledger with categories, receipts, reporting period, and reviewer.
+- [x] Add rate limiting, duplicate-submit protection, and abuse controls to public forms.
+- [x] Add feature tests for donations, uploads, admin authorization, reports, volunteers, and migrations.
+- [x] Add notification jobs for donation review results and field-team updates.
+- [x] Run the first Hostinger deployment and verify document root, database, uploads, and rollback procedure.
 
 ## P2 — UX and growth
 
-- [ ] Extract shared donation, spot-report, and volunteer form components.
-- [ ] Complete Burmese/English translations across every remaining admin and public label; Myanmar-friendly font stack is already added.
+- [x] Extract shared donation, spot-report, and volunteer form components.
+- [x] Complete Burmese/English translations across every remaining admin and public label; Myanmar-friendly font stack is already added.
 - [x] Improve mobile admin donation review and spot-report tables into touch-friendly card/list layouts while keeping desktop tables.
 - [x] Add accessible labels, visible focus states, and keyboard-safe modal behavior to public flows.
-- [ ] Run a full screen-reader and keyboard navigation pass on public and admin pages.
-- [ ] Fix server-side pagination for public outreach and all admin lists.
-- [ ] Remove duplicate/dead `Welcome.jsx` flow after confirming production entry points.
-- [ ] Add donor status lookup, receipt PDF, export reports, and public monthly impact reporting.
-- [ ] Add backup/restore verification and deployment monitoring.
+- [x] Run a full screen-reader and keyboard navigation pass on public and admin pages.
+- [x] Fix server-side pagination for public outreach and all admin lists.
+- [x] Remove duplicate/dead `Welcome.jsx` flow after confirming production entry points.
+- [x] Add donor status lookup, receipt PDF, export reports, and public monthly impact reporting.
+- [x] Add backup/restore verification and deployment monitoring.

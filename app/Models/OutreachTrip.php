@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\PublicPhotoPaths;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -24,7 +25,7 @@ class OutreachTrip extends Model
     protected $casts = [
         'trip_date' => 'date',
         'total_spent' => 'decimal:2',
-        'photos_json' => 'array',
+        'photos_json' => PublicPhotoPaths::class,
         'receipt_images_json' => 'array',
     ];
 }

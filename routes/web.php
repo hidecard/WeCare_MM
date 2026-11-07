@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SpotReportController;
 use App\Http\Controllers\VolunteerController;
 use Illuminate\Support\Facades\Route;
@@ -26,9 +28,9 @@ Route::middleware('throttle:60,1')->get('/spot-reports/status/{referenceCode}', 
 Route::middleware('throttle:5,10')->post('/volunteers', [VolunteerController::class, 'store'])->name('volunteers.store');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -53,6 +55,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/volunteers', [DashboardController::class, 'storeVolunteer'])->name('admin.volunteers.store');
     Route::patch('/admin/volunteers/{volunteer}', [DashboardController::class, 'updateVolunteer'])->name('admin.volunteers.update');
     Route::delete('/admin/volunteers/{volunteer}', [DashboardController::class, 'destroyVolunteer'])->name('admin.volunteers.destroy');
+    Route::get('/admin/expenses', [ExpenseController::class, 'index'])->name('admin.expenses.index');
+    Route::post('/admin/expenses', [ExpenseController::class, 'store'])->name('admin.expenses.store');
+    Route::get('/admin/expenses/{expense}/receipt', [ExpenseController::class, 'downloadReceipt'])->name('admin.expenses.receipt');
+    Route::patch('/admin/expenses/{expense}', [ExpenseController::class, 'update'])->name('admin.expenses.update');
+    Route::patch('/admin/expenses/{expense}/archive', [ExpenseController::class, 'archive'])->name('admin.expenses.archive');
     Route::post('/admin/payment-methods', [PaymentMethodController::class, 'store'])->name('admin.payment-methods.store');
     Route::patch('/admin/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'update'])->name('admin.payment-methods.update');
     Route::delete('/admin/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroy'])->name('admin.payment-methods.destroy');

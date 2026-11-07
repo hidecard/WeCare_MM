@@ -10,7 +10,15 @@ class EnsureUserIsAdmin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        abort_unless($request->user()?->role === 'admin', 403);
+        $user = $request->user();
+
+        if (! $user) {
+            return redirect()->guest(route('login'));
+        }
+
+        if ($user->role !== 'admin') {
+            abort(403, 'This area is for administrators only.');
+        }
 
         return $next($request);
     }

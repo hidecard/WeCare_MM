@@ -1,9 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const STORAGE_KEY = 'wecare-language';
 const DEFAULT_LANGUAGE = 'my';
 
 const normalizeLanguage = (language) => (language === 'en' ? 'en' : DEFAULT_LANGUAGE);
+
+const applyDocumentLang = (language) => {
+    if (typeof document !== 'undefined') {
+        document.documentElement.lang = language === 'en' ? 'en' : 'my';
+    }
+};
 
 const getStoredLanguage = () => {
     if (typeof window === 'undefined') {
@@ -19,6 +25,10 @@ const getStoredLanguage = () => {
 
 export default function useLanguage() {
     const [lang, setLanguage] = useState(getStoredLanguage);
+
+    useEffect(() => {
+        applyDocumentLang(lang);
+    }, [lang]);
 
     const setLang = (nextLanguage) => {
         const resolvedLanguage = typeof nextLanguage === 'function'

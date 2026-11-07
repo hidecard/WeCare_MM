@@ -10,8 +10,10 @@ use App\Models\FundPool;
 use App\Models\OutreachTrip;
 use App\Models\SpotReport;
 use App\Models\Volunteer;
+use App\Notifications\DonationReviewedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -269,13 +271,15 @@ class DashboardController extends Controller
 
     public function updateDonationStatus(Request $request, Donation $donation)
     {
-        $status = $request->input('status');
+        $data = $request->validate([
+            'status' => ['required', 'in:approved,rejected'],
+            'review_note' => ['nullable', 'string', 'max:1000', 'required_if:status,rejected'],
+        ]);
 
-        if (! in_array($status, ['approved', 'rejected'], true)) {
-            return redirect()->back()->withErrors(['status' => 'Invalid status value.']);
-        }
+        $status = $data['status'];
+        $reviewNote = filled($data['review_note'] ?? null) ? trim($data['review_note']) : null;
 
-        $updated = DB::transaction(function () use ($donation, $status): bool {
+        $updated = DB::transaction(function () use ($donation, $status, $reviewNote): bool {
             $lockedDonation = Donation::query()->lockForUpdate()->findOrFail($donation->id);
 
             if ($lockedDonation->status !== 'pending') {
@@ -293,6 +297,7 @@ class DashboardController extends Controller
             }
 
             $lockedDonation->status = $status;
+            $lockedDonation->review_note = $reviewNote;
             $lockedDonation->save();
 
             return true;
@@ -302,14 +307,26 @@ class DashboardController extends Controller
             return redirect()->back()->withErrors(['status' => 'This donation has already been reviewed.']);
         }
 
+        $donation->refresh();
+
         AuditLog::query()->create([
             'actor_id' => auth()->id(),
             'action' => 'donation.status_updated',
             'auditable_type' => Donation::class,
             'auditable_id' => $donation->id,
-            'metadata' => ['status' => $status],
+            'metadata' => ['status' => $status, 'review_note' => $reviewNote],
             'ip_address' => request()->ip(),
         ]);
+
+        if (filled($donation->donor_email)) {
+            Notification::route('mail', $donation->donor_email)->notify(new DonationReviewedNotification(
+                status: $donation->status,
+                donorName: $donation->is_anonymous ? 'Anonymous donor' : ($donation->donor_name ?: 'Supporter'),
+                amount: number_format((float) $donation->amount, 0),
+                reviewNote: $donation->review_note,
+                trackingUrl: route('donations.status-page').'?token='.urlencode((string) $donation->tracking_token),
+            ));
+        }
 
         return redirect()->back()->with('success', 'Donation status updated successfully.');
     }

@@ -3,10 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\FundPool;
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -20,32 +18,16 @@ class DatabaseSeeder extends Seeder
         if (app()->environment('production')) {
             throw new \RuntimeException('Do not seed production. Run php artisan wecare:bootstrap-admin once instead.');
         }
-        $adminPassword = env('WECARE_ADMIN_PASSWORD', 'password123');
 
-        User::query()->updateOrCreate(
-            ['email' => env('WECARE_ADMIN_EMAIL', 'admin@wecare.test')],
-            [
-                'name' => 'WeCare Admin',
-                'email' => env('WECARE_ADMIN_EMAIL', 'admin@wecare.test'),
-                'email_verified_at' => now(),
-                'password' => Hash::make($adminPassword),
-                'role' => 'admin',
-            ],
-        );
+        $this->call(RoleUserSeeder::class);
+        $this->seedFundPools();
+    }
 
-        User::query()->updateOrCreate(
-            ['email' => 'test@example.com'],
-            [
-                'name' => 'Test User',
-                'email' => 'test@example.com',
-                'password' => Hash::make('password123'),
-                'role' => 'user',
-            ],
-        );
-
+    private function seedFundPools(): void
+    {
         $fundPools = [
             [
-                'title_mm' => 'နေ့စဉ်အစားအစာ',
+                'title_mm' => 'နေ့စဉ် အစားအစာ',
                 'title_en' => 'Daily Meals',
                 'description' => 'Warm meals and basic support for elders on the street.',
                 'unit_cost' => 5000,
@@ -53,7 +35,7 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'title_mm' => 'အရေးပေါ်ဆေးဝါး',
+                'title_mm' => 'အရေးပေါ် ဆေးဝါး',
                 'title_en' => 'Emergency Medical',
                 'description' => 'Medicine, consultation, and urgent caregiver support.',
                 'unit_cost' => 10000,
@@ -69,7 +51,7 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'title_mm' => 'အထွေထွေလမ်းဘေးထောက်ပံ့မှု',
+                'title_mm' => 'အထွေထွေ လမ်းဘေးထောက်ပံ့မှု',
                 'title_en' => 'General Outreach',
                 'description' => 'Flexible support for urgent street outreach needs.',
                 'unit_cost' => 8000,
