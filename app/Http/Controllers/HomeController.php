@@ -45,13 +45,26 @@ class HomeController extends Controller
         ]);
     }
 
-    public function outreach()
+    public function outreach(Request $request)
     {
+        $filters = $request->validate([
+            'township' => ['nullable', 'string', 'max:255'],
+            'month' => ['nullable', 'date_format:Y-m'],
+        ]);
+
         return Inertia::render('Outreach', [
             'recentTrips' => OutreachTrip::query()
                 ->withSum(['expenses as ledger_spent' => fn ($query) => $query->whereNull('archived_at')], 'amount')
+                ->when($filters['township'] ?? null, fn ($query, $township) => $query->where('township', $township))
+                ->when($filters['month'] ?? null, fn ($query, $month) => $query->where('trip_date', 'like', $month.'%'))
                 ->latest('trip_date')
-                ->get(),
+                ->paginate(6)
+                ->withQueryString(),
+            'townships' => OutreachTrip::query()->select('township')->distinct()->orderBy('township')->pluck('township')->values(),
+            'filters' => [
+                'township' => $filters['township'] ?? 'all',
+                'month' => $filters['month'] ?? '',
+            ],
         ]);
     }
 

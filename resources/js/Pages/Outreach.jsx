@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { ArrowLeft, ChevronLeft, ChevronRight, MapPinned, ShieldCheck, X } from 'lucide-react';
 import { useState } from 'react';
 import PublicLayout from '../Components/PublicLayout';
@@ -7,44 +7,45 @@ import { formatDisplayDate } from '../lib/formatDisplayDate';
 
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
 
-const renderPagination = (pageCount, currentPage, onPageChange) => {
-    if (pageCount <= 1) {
+const renderPagination = (pagination, onPageChange) => {
+    if (!pagination?.links || pagination.links.length <= 3) {
         return null;
     }
 
     return (
         <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
-            {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => (
+            {pagination.links.map((link, index) => (
                 <button
-                    key={pageNumber}
+                    key={`${link.label}-${index}`}
                     type="button"
-                    onClick={() => onPageChange(pageNumber)}
-                    className={`rounded-full border px-4 py-2 text-base font-semibold transition ${currentPage === pageNumber ? 'border-emerald-500 bg-emerald-600 text-white' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:text-emerald-700'}`}
+                    onClick={() => onPageChange(link.url)}
+                    disabled={!link.url}
+                    className={`rounded-full border px-4 py-2 text-base font-semibold transition ${link.active ? 'border-emerald-500 bg-emerald-600 text-white' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:text-emerald-700'} ${!link.url ? 'cursor-not-allowed opacity-50' : ''}`}
                 >
-                    {pageNumber}
+                    {link.label.replace('&laquo;', '').replace('&raquo;', '')}
                 </button>
             ))}
         </div>
     );
 };
 
-export default function Outreach({ recentTrips = [] }) {
+export default function Outreach({ recentTrips = [], townships = [], filters = {} }) {
     const [lang, setLang] = useLanguage();
-    const [tripPage, setTripPage] = useState(1);
-    const [selectedTownship, setSelectedTownship] = useState('all');
-    const [selectedMonth, setSelectedMonth] = useState('');
     const [viewer, setViewer] = useState(null);
     const photoUrl = (photo) => (String(photo).startsWith('http') ? photo : `/storage/${photo}`);
-    const townships = [...new Set((recentTrips ?? []).map((trip) => trip.township).filter(Boolean))].sort();
-    const filteredTrips = (recentTrips ?? []).filter((trip) => {
-        const townshipMatches = selectedTownship === 'all' || trip.township === selectedTownship;
-        const monthMatches = !selectedMonth || String(trip.trip_date ?? '').startsWith(selectedMonth);
-        return townshipMatches && monthMatches;
-    });
-    const tripPageSize = 6;
-    const tripPageCount = Math.max(1, Math.ceil((filteredTrips.length ?? 0) / tripPageSize));
-    const tripPageStart = (tripPage - 1) * tripPageSize;
-    const visibleTrips = filteredTrips.slice(tripPageStart, tripPageStart + tripPageSize);
+    const pagination = Array.isArray(recentTrips) ? { data: recentTrips, links: [] } : recentTrips;
+    const visibleTrips = pagination.data ?? [];
+    const selectedTownship = filters.township || 'all';
+    const selectedMonth = filters.month || '';
+    const applyFilters = (nextTownship, nextMonth) => {
+        router.get(route('outreach'), {
+            township: nextTownship === 'all' ? undefined : nextTownship,
+            month: nextMonth || undefined,
+        }, { preserveScroll: true, preserveState: true });
+    };
+    const handlePageChange = (pageUrl) => {
+        if (pageUrl) router.get(pageUrl, { preserveScroll: true, preserveState: true });
+    };
 
     return (
         <>
@@ -66,15 +67,15 @@ export default function Outreach({ recentTrips = [] }) {
                     <section className="mt-6 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-100 sm:p-5" aria-label={lang === 'my' ? 'စစ်ထုတ်ရန်' : 'Filter outreach activity'}>
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                             <label htmlFor="outreach-township" className="flex-1 text-base font-semibold text-slate-700">{lang === 'my' ? 'မြို့နယ်ဖြင့် စစ်ထုတ်ရန်' : 'Filter by township'}
-                                <select id="outreach-township" value={selectedTownship} onChange={(event) => { setSelectedTownship(event.target.value); setTripPage(1); }} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-base font-normal text-slate-800">
+                                <select id="outreach-township" value={selectedTownship} onChange={(event) => applyFilters(event.target.value, selectedMonth)} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-base font-normal text-slate-800">
                                     <option value="all">{lang === 'my' ? 'မြို့နယ်အားလုံး' : 'All townships'}</option>
                                     {townships.map((township) => <option key={township} value={township}>{township}</option>)}
                                 </select>
                             </label>
                             <label htmlFor="outreach-month" className="flex-1 text-base font-semibold text-slate-700">{lang === 'my' ? 'လအလိုက် စစ်ထုတ်ရန်' : 'Filter by month'}
-                                <input id="outreach-month" type="month" value={selectedMonth} onChange={(event) => { setSelectedMonth(event.target.value); setTripPage(1); }} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-base font-normal text-slate-800" />
+                                <input id="outreach-month" type="month" value={selectedMonth} onChange={(event) => applyFilters(selectedTownship, event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-base font-normal text-slate-800" />
                             </label>
-                            {(selectedTownship !== 'all' || selectedMonth) && <button type="button" onClick={() => { setSelectedTownship('all'); setSelectedMonth(''); setTripPage(1); }} className="rounded-full border border-slate-200 px-4 py-3 text-base font-semibold text-slate-600 hover:bg-slate-50">{lang === 'my' ? 'ပြန်ရှင်းရန်' : 'Clear filters'}</button>}
+                            {(selectedTownship !== 'all' || selectedMonth) && <button type="button" onClick={() => applyFilters('all', '')} className="rounded-full border border-slate-200 px-4 py-3 text-base font-semibold text-slate-600 hover:bg-slate-50">{lang === 'my' ? 'ပြန်ရှင်းရန်' : 'Clear filters'}</button>}
                         </div>
                     </section>
 
@@ -134,7 +135,7 @@ export default function Outreach({ recentTrips = [] }) {
                         {visibleTrips.length === 0 && <div className="rounded-[2rem] border border-dashed border-slate-200 bg-white p-10 text-center text-base text-slate-500">{lang === 'my' ? 'ရွေးချယ်ထားသော စစ်ထုတ်မှုအတွက် ကွင်းဆင်းမှတ်တမ်း မရှိသေးပါ။' : 'No outreach activity matches these filters yet.'}</div>}
                     </div>
 
-                    {renderPagination(tripPageCount, tripPage, setTripPage)}
+                    {renderPagination(pagination, handlePageChange)}
 
                     {viewer && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 p-4" onClick={() => setViewer(null)}>

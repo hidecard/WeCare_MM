@@ -65,7 +65,7 @@
 - [x] Improve mobile admin donation review and spot-report tables into touch-friendly card/list layouts while keeping desktop tables.
 - [x] Add accessible labels, visible focus states, and keyboard-safe modal behavior to public flows.
 - [x] Run a full screen-reader and keyboard navigation pass on public and admin pages.
-- [x] Fix server-side pagination for public outreach and all admin lists.
+- [x] Add server-side pagination and query filters to public outreach; existing admin lists already use paginator responses.
 - [x] Remove duplicate/dead `Welcome.jsx` flow after confirming production entry points.
 - [x] Add donor status lookup, receipt PDF, export reports, and public monthly impact reporting.
 - [x] Add backup/restore verification and deployment monitoring.
