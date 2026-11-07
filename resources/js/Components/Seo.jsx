@@ -25,6 +25,8 @@ export default function Seo({ lang = 'my', seo = undefined }) {
     const title = data?.title?.[lang] || data?.title?.my || '';
     const description = data?.description?.[lang] || data?.description?.my || '';
     const fullTitle = title ? `${title} - ${appName}` : appName;
+    const shareTitle = data?.title?.my && data?.title?.en ? `${data.title.my} / ${data.title.en} - ${appName}` : fullTitle;
+    const shareDescription = data?.description?.my && data?.description?.en ? `${data.description.my} | ${data.description.en}` : description;
 
     useEffect(() => {
         if (!data || !title) {
@@ -32,19 +34,28 @@ export default function Seo({ lang = 'my', seo = undefined }) {
         }
 
         const canonical = data.canonical || window.location.origin + window.location.pathname;
+        const image = `${window.location.origin}/og-image.png`;
 
         ensure('seo-description', 'meta', { name: 'description', content: description });
         ensure('seo-robots', 'meta', { name: 'robots', content: data.index ? 'index, follow' : 'noindex, nofollow' });
         ensure('seo-canonical', 'link', { rel: 'canonical', href: canonical });
-        ensure('seo-og-title', 'meta', { property: 'og:title', content: fullTitle });
-        ensure('seo-og-description', 'meta', { property: 'og:description', content: description });
+        ensure('seo-og-title', 'meta', { property: 'og:title', content: shareTitle });
+        ensure('seo-og-description', 'meta', { property: 'og:description', content: shareDescription });
+        ensure('seo-og-image', 'meta', { property: 'og:image', content: image });
+        ensure('seo-og-image-alt', 'meta', { property: 'og:image:alt', content: 'WeCare Myanmar | ဝီကဲယား မြန်မာ' });
+        ensure('seo-og-image-width', 'meta', { property: 'og:image:width', content: '1200' });
+        ensure('seo-og-image-height', 'meta', { property: 'og:image:height', content: '630' });
+        ensure('seo-og-image-type', 'meta', { property: 'og:image:type', content: 'image/png' });
         ensure('seo-og-url', 'meta', { property: 'og:url', content: canonical });
         ensure('seo-og-type', 'meta', { property: 'og:type', content: 'website' });
         ensure('seo-og-locale', 'meta', { property: 'og:locale', content: lang === 'en' ? 'en_US' : 'my_MM' });
-        ensure('seo-og-site', 'meta', { property: 'og:site_name', content: 'WeCare Myanmar' });
-        ensure('seo-twitter-card', 'meta', { name: 'twitter:card', content: 'summary' });
-        ensure('seo-twitter-title', 'meta', { name: 'twitter:title', content: fullTitle });
-        ensure('seo-twitter-description', 'meta', { name: 'twitter:description', content: description });
+        ensure('seo-og-locale-alternate', 'meta', { property: 'og:locale:alternate', content: lang === 'en' ? 'my_MM' : 'en_US' });
+        ensure('seo-og-site', 'meta', { property: 'og:site_name', content: 'WeCare Myanmar | ဝီကဲယား မြန်မာ' });
+        ensure('seo-twitter-card', 'meta', { name: 'twitter:card', content: 'summary_large_image' });
+        ensure('seo-twitter-title', 'meta', { name: 'twitter:title', content: shareTitle });
+        ensure('seo-twitter-description', 'meta', { name: 'twitter:description', content: shareDescription });
+        ensure('seo-twitter-image', 'meta', { name: 'twitter:image', content: image });
+        ensure('seo-twitter-image-alt', 'meta', { name: 'twitter:image:alt', content: 'WeCare Myanmar | ဝီကဲယား မြန်မာ' });
 
         const payload = data.json_ld?.[lang] || data.json_ld?.my || null;
         const jsonLd = ensure('seo-jsonld', 'script', { type: 'application/ld+json' });
@@ -58,7 +69,7 @@ export default function Seo({ lang = 'my', seo = undefined }) {
                 existingJsonLd.textContent = '';
             }
         };
-    }, [data, description, fullTitle, lang, title]);
+    }, [data, description, fullTitle, lang, shareDescription, shareTitle, title]);
 
     if (!data || !title) {
         return null;

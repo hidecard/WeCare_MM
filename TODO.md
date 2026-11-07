@@ -69,3 +69,4 @@
 - [x] Remove duplicate/dead `Welcome.jsx` flow after confirming production entry points.
 - [x] Add donor status lookup, receipt PDF, export reports, and public monthly impact reporting.
 - [x] Add backup/restore verification and deployment monitoring.
+- [x] Add bilingual Open Graph/Twitter share metadata and a 1200×630 WeCare Myanmar preview image to all public frontend pages.
