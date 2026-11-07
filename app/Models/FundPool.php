@@ -13,6 +13,7 @@ class FundPool extends Model
         'title_mm',
         'title_en',
         'description',
+        'description_mm',
         'unit_cost',
         'total_raised',
         'is_active',

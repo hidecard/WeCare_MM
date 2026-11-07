@@ -1,5 +1,7 @@
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { ArrowLeft, Home, LifeBuoy, LockKeyhole, LogIn, SearchX, ServerCrash, Timer } from 'lucide-react';
+import Seo from '../Components/Seo';
+import useLanguage from '../hooks/useLanguage';
 
 const copyByStatus = {
     401: {
@@ -47,6 +49,7 @@ const copyByStatus = {
 };
 
 export default function Error({ status, message }) {
+    const [lang] = useLanguage();
     const meta = copyByStatus[status] ?? {
         icon: ServerCrash,
         title: 'Unexpected error',
@@ -59,7 +62,7 @@ export default function Error({ status, message }) {
 
     return (
         <>
-            <Head title={`${status} — ${meta.title}`} />
+            <Seo lang={lang} />
             <div className="relative min-h-screen overflow-hidden bg-[#FFFBEB] text-slate-800">
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.12),_transparent_42%),radial-gradient(circle_at_bottom_right,_rgba(245,158,11,0.14),_transparent_38%)]" />
                 <main className="relative mx-auto flex min-h-screen max-w-3xl items-center px-4 py-12 sm:px-6">

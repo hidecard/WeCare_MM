@@ -79,6 +79,12 @@ it('shows approved donations, expenses, trips, and resolved reports from stored 
             ->where('financialSummary.outreach_trips', 1)
             ->where('financialSummary.resolved_reports', 1)
             ->where('impact.total_elderly_helped', 4)
+            ->where('expenseBreakdown', function ($rows): bool {
+                $food = collect($rows)->firstWhere('category', 'food');
+                $transport = collect($rows)->firstWhere('category', 'transport');
+
+                return $food && (float) $food['amount'] === 3000.0 && $transport === null;
+            })
             ->has('monthlySummary', 6)
             ->where('monthlySummary', function ($months) use ($month): bool {
                 $current = collect($months)->firstWhere('month', $month);

@@ -1,4 +1,5 @@
 import { Check, Copy, CreditCard } from 'lucide-react';
+import { myanmarMobileError } from '../lib/myanmarMobile';
 
 export default function DonationFlowSteps({
     step,
@@ -14,8 +15,11 @@ export default function DonationFlowSteps({
     slipPreview = '',
     slipError = '',
     review = null,
+    onEditPool,
+    onEditAmount,
 }) {
     const copy = (myanmar, english) => (lang === 'my' ? myanmar : english);
+    const phoneError = myanmarMobileError(donationForm.data.phone, lang) || donationForm.errors.phone || '';
 
     if (step === 2) {
         const methods = Object.entries(paymentDetails);
@@ -28,10 +32,8 @@ export default function DonationFlowSteps({
                             <div className="min-w-0">
                                 <p className="font-semibold">{method}</p>
                                 <p className="text-xs text-emerald-50/85">{details.label}</p>
-                                {details.qr_url && <img src={details.qr_url} alt={`${method} QR`} className="mt-2 h-20 w-20 rounded-lg bg-white object-contain p-1" loading="lazy" />}
                             </div>
                             <div className="flex shrink-0 items-center gap-2">
-                                <span className="rounded-full bg-white/10 px-2 py-1 text-xs font-medium">{details.phone}</span>
                                 {active && <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#F59E0B] text-[#065F46]"><Check className="h-3.5 w-3.5" strokeWidth={3} /></span>}
                             </div>
                         </button>
@@ -41,14 +43,21 @@ export default function DonationFlowSteps({
                     <p role="alert" className="rounded-xl bg-amber-100 p-3 text-sm font-semibold text-amber-900">{copy('ငွေပေးချေမှုနည်းလမ်း မသတ်မှတ်ရသေးပါ။ အုပ်ချုပ်သူထံ ဆက်သွယ်ပါ။', 'No payment methods are configured yet. Please contact the administrator.')}</p>
                 )}
                 {paymentDetails[selectedPayment] && (
-                    <div className="rounded-2xl bg-white/5 p-4 ring-1 ring-white/10">
-                        <div className="flex items-center gap-2 text-emerald-50"><CreditCard className="h-4 w-4" /> {selectedPayment}</div>
-                        <p className="mt-2 text-sm text-emerald-50/85">{paymentDetails[selectedPayment]?.account_name}</p>
-                        <p className="mt-1 text-base font-semibold text-white">{paymentDetails[selectedPayment]?.phone}</p>
-                        <button type="button" onClick={() => onCopyPaymentNumber(selectedPayment)} className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#F59E0B] px-3.5 py-2 text-sm font-semibold text-[#065F46] transition hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40">
+                    <div className="rounded-2xl bg-white p-5 text-slate-900">
+                        <div className="flex items-center gap-2 text-base font-semibold text-emerald-800"><CreditCard className="h-5 w-5" /> {selectedPayment}</div>
+                        <p className="mt-3 text-base text-slate-600">{paymentDetails[selectedPayment]?.account_name}</p>
+                        <p className="mt-1 break-all text-3xl font-black tracking-wide text-slate-900">{paymentDetails[selectedPayment]?.phone}</p>
+                        {String(paymentDetails[selectedPayment]?.phone || '').replace(/\D/g, '').length > 0 && String(paymentDetails[selectedPayment]?.phone || '').replace(/\D/g, '').length < 9 && (
+                            <p role="alert" className="mt-2 text-base font-semibold text-red-700">{copy('နံပါတ်စစ်ပါ။ ဒီအကောင့်နံပါတ်က မပြည့်သေးပါ။', 'Check this number. It looks incomplete.')}</p>
+                        )}
+                        {paymentDetails[selectedPayment]?.qr_url && (
+                            <img src={paymentDetails[selectedPayment].qr_url} alt={`${selectedPayment} QR`} className="mx-auto mt-4 h-56 w-56 rounded-2xl bg-white object-contain p-3 ring-1 ring-slate-200" />
+                        )}
+                        <button type="button" disabled={String(paymentDetails[selectedPayment]?.phone || '').replace(/\D/g, '').length < 9} onClick={() => onCopyPaymentNumber(selectedPayment)} className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#F59E0B] px-4 py-3 text-base font-bold text-[#065F46] transition hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-200 disabled:cursor-not-allowed disabled:opacity-50">
                             {copiedPayment ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                            {copiedPayment ? copy('ကူးယူပြီးပါပြီ', 'Copied') : copy('အကောင့်နံပါတ် ကူးယူရန်', 'Copy account number')}
+                            {copiedPayment ? copy('ကူးပြီးပါပြီ', 'Copied') : copy('အကောင့်နံပါတ် ကူးရန်', 'Copy account number')}
                         </button>
+                        {copiedPayment && <p role="status" className="mt-2 text-base font-semibold text-emerald-700">{copy('နံပါတ်ကို ကူးပြီးပါပြီ။ ငွေလွှဲအက်ပ်ထဲမှာ ပွားထည့်ပါ။', 'The number is copied. Paste it in your payment app.')}</p>}
                     </div>
                 )}
             </div>
@@ -57,38 +66,46 @@ export default function DonationFlowSteps({
 
     if (step !== 3) return null;
 
+    const paymentMethods = Object.entries(paymentDetails);
+
     return (
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
-            {review && (
-                <div className="rounded-2xl bg-white/10 p-4 ring-1 ring-white/15">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-100/90">{copy('သင့်လှူဒါန်းမှု အကျဉ်းချုပ်', 'Your donation summary')}</p>
-                    <div className="mt-3 space-y-1.5 text-sm text-white">
-                        <p><span className="text-emerald-50/80">{copy('အပိုင်း', 'Support')}:</span> <span className="font-semibold">{review.pool}</span></p>
-                        <p><span className="text-emerald-50/80">{copy('ပမာဏ', 'Amount')}:</span> <span className="font-semibold">{review.amount}</span></p>
-                        <p><span className="text-emerald-50/80">{copy('ငွေပေးချေမှု', 'Payment')}:</span> <span className="font-semibold">{review.payment || '—'}</span></p>
-                    </div>
-                </div>
-            )}
+            {paymentMethods.length === 0 ? (
+                <p role="alert" className="rounded-xl bg-amber-100 p-4 text-base font-semibold text-amber-900">{copy('ငွေပေးချေမှု မဖွင့်ရသေးပါ။ လှူဒါန်းခလုတ်ကို ခဏပိတ်ထားပါတယ်။', 'Payments are not open yet, so donating is paused.')}</p>
+            ) : null}
             {Object.keys(donationForm.errors).length > 0 && (
                 <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
                     {Object.entries(donationForm.errors).map(([field, message]) => <p key={field}>{message}</p>)}
                 </div>
             )}
             <div className="grid gap-3 sm:grid-cols-2">
-                <label htmlFor="shared-donor-name" className="text-sm font-semibold text-emerald-50">{copy('လှူဒါန်းသူအမည်', 'Donor name')}<input id="shared-donor-name" type="text" autoComplete="name" value={donationForm.data.donor_name} onChange={(event) => donationForm.setData('donor_name', event.target.value)} className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-3 text-sm font-normal text-white placeholder:text-emerald-50/50 outline-none transition focus:border-[#F59E0B] focus:ring-2 focus:ring-[#F59E0B]/30" /></label>
-                <label htmlFor="shared-donor-phone" className="text-sm font-semibold text-emerald-50">{copy('ဖုန်းနံပါတ်', 'Phone')}<input id="shared-donor-phone" type="tel" inputMode="tel" autoComplete="tel" value={donationForm.data.phone} onChange={(event) => donationForm.setData('phone', event.target.value)} className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-3 text-sm font-normal text-white placeholder:text-emerald-50/50 outline-none transition focus:border-[#F59E0B] focus:ring-2 focus:ring-[#F59E0B]/30" /></label>
+                <label htmlFor="shared-donor-name" className="text-base font-semibold text-emerald-50">{copy('လှူဒါန်းသူအမည်', 'Donor name')}<input id="shared-donor-name" type="text" autoComplete="name" value={donationForm.data.donor_name} onChange={(event) => donationForm.setData('donor_name', event.target.value)} className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-3 text-base font-normal text-white placeholder:text-emerald-50/50 outline-none transition focus:border-[#F59E0B] focus:ring-2 focus:ring-[#F59E0B]/30" /></label>
+                <label htmlFor="shared-donor-phone" className="text-base font-semibold text-emerald-50">{copy('ဖုန်းနံပါတ်', 'Phone')}<input id="shared-donor-phone" type="tel" inputMode="tel" autoComplete="tel" value={donationForm.data.phone} onChange={(event) => donationForm.setData('phone', event.target.value)} aria-invalid={Boolean(phoneError)} placeholder="09..." className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-3 text-base font-normal text-white placeholder:text-emerald-50/50 outline-none transition focus:border-[#F59E0B] focus:ring-2 focus:ring-[#F59E0B]/30" /></label>
             </div>
-            <label htmlFor="shared-donor-email" className="block text-sm font-semibold text-emerald-50">{copy('အီးမေးလ် (အတည်ပြုချက် ပို့ရန်)', 'Email for the review result')}<input id="shared-donor-email" type="email" autoComplete="email" value={donationForm.data.donor_email ?? ''} onChange={(event) => donationForm.setData('donor_email', event.target.value)} className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-3 text-sm font-normal text-white placeholder:text-emerald-50/50 outline-none transition focus:border-[#F59E0B] focus:ring-2 focus:ring-[#F59E0B]/30" placeholder="name@email.com" /></label>
-            <label className="flex items-center gap-2 text-sm text-emerald-50/90"><input type="checkbox" checked={donationForm.data.is_anonymous} onChange={(event) => donationForm.setData('is_anonymous', event.target.checked)} className="h-4 w-4 rounded border-white/20 bg-white/5 text-amber-500 accent-amber-400 focus:ring-amber-300" />{copy('အမည်မဖော်ပြဘဲ လှူဒါန်းမည်', 'Donate anonymously')}</label>
-            <label htmlFor="shared-wish-note" className="block text-sm font-semibold text-emerald-50">{copy('ဆုတောင်းစကား / အကြံပြုချက်', 'Wish note or encouragement')}<textarea id="shared-wish-note" value={donationForm.data.wish_note} onChange={(event) => donationForm.setData('wish_note', event.target.value)} rows="3" className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-3 text-sm font-normal text-white placeholder:text-emerald-50/50 outline-none transition focus:border-[#F59E0B] focus:ring-2 focus:ring-[#F59E0B]/30" placeholder={copy('ဥပမာ - သက်ကြီးရွယ်အိုများ ကျန်းမာချမ်းသာပါစေ', 'e.g. Wishing health and comfort to the elders')} /></label>
-            <label htmlFor="shared-slip-image" className="block text-sm font-semibold text-emerald-50">{copy('ငွေလွှဲပြေစာပုံ', 'Payment slip')}<input id="shared-slip-image" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" required onChange={onSlipChange} className="mt-1 block w-full rounded-xl border border-dashed border-white/15 bg-white/5 px-3 py-3 text-sm font-normal text-emerald-50/70 file:mr-3 file:rounded-full file:border-0 file:bg-[#F59E0B] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#065F46]" /></label>
-            {slipError && <p role="alert" className="rounded-xl bg-red-100 p-3 text-xs font-semibold text-red-800">{slipError}</p>}
-            {slipPreview && <img src={slipPreview} alt={copy('ငွေလွှဲပြေစာ ကြိုတင်ကြည့်ရှုမှု', 'Payment slip preview')} className="h-40 w-full rounded-xl bg-white/10 object-contain p-2 ring-1 ring-white/10" />}
-            <p className="-mt-2 text-xs text-emerald-50/70">{copy('JPG, PNG, WEBP (4 MB အထိ) တင်ပါ။', 'Upload JPG, PNG, or WEBP (up to 4 MB).')}</p>
-            <button type="submit" className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#F59E0B] px-4 py-3.5 text-base font-bold text-[#065F46] shadow-sm transition hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40 disabled:cursor-not-allowed disabled:opacity-60" disabled={donationForm.processing || !!slipError}>
+            <label htmlFor="shared-donor-email" className="block text-base font-semibold text-emerald-50">{copy('အီးမေးလ် (အတည်ပြုချက် ပို့ရန်)', 'Email for the review result')}<input id="shared-donor-email" type="email" autoComplete="email" value={donationForm.data.donor_email ?? ''} onChange={(event) => donationForm.setData('donor_email', event.target.value)} className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-3 text-base font-normal text-white placeholder:text-emerald-50/50 outline-none transition focus:border-[#F59E0B] focus:ring-2 focus:ring-[#F59E0B]/30" placeholder="name@email.com" /></label>
+            <label className="flex items-center gap-2 text-base text-emerald-50/90"><input type="checkbox" checked={donationForm.data.is_anonymous} onChange={(event) => donationForm.setData('is_anonymous', event.target.checked)} className="h-4 w-4 rounded border-white/20 bg-white/5 text-amber-500 accent-amber-400 focus:ring-amber-300" />{copy('အမည်မဖော်ပြဘဲ လှူဒါန်းမည်', 'Donate anonymously')}</label>
+            <label htmlFor="shared-wish-note" className="block text-base font-semibold text-emerald-50">{copy('ဆုတောင်းစကား / အကြံပြုချက်', 'Wish note or encouragement')}<textarea id="shared-wish-note" value={donationForm.data.wish_note} onChange={(event) => donationForm.setData('wish_note', event.target.value)} rows="3" className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-3 text-base font-normal text-white placeholder:text-emerald-50/50 outline-none transition focus:border-[#F59E0B] focus:ring-2 focus:ring-[#F59E0B]/30" placeholder={copy('ဥပမာ - သက်ကြီးရွယ်အိုများ ကျန်းမာချမ်းသာပါစေ', 'e.g. Wishing health and comfort to the elders')} /></label>
+            <label htmlFor="shared-slip-image" className="block text-base font-semibold text-emerald-50">{copy('ငွေလွှဲပြေစာပုံ', 'Payment slip')}<input id="shared-slip-image" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" required onChange={onSlipChange} className="mt-1 block w-full rounded-xl border border-dashed border-white/15 bg-white/5 px-3 py-3 text-sm font-normal text-emerald-50/70 file:mr-3 file:rounded-full file:border-0 file:bg-[#F59E0B] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#065F46]" /></label>
+            {slipPreview && <img src={slipPreview} alt={copy('ငွေလွှဲပြေစာ ကြိုတင်ကြည့်ရှုမှု', 'Payment slip preview')} className="h-40 w-full rounded-xl bg-white object-contain p-2" />}
+            <p className="text-base text-emerald-50/80">{copy('JPG, PNG, WEBP (4 MB အထိ) တင်ပါ။', 'Upload JPG, PNG, or WEBP (up to 4 MB).')}</p>
+            {review && (
+                <div className="rounded-2xl bg-white p-4 text-slate-900">
+                    <p className="text-base font-semibold text-emerald-800">{copy('မပို့မီ စစ်ပါ', 'Check before you send')}</p>
+                    <p className="mt-2 text-lg font-black">{review.pool}</p>
+                    <p className="mt-1 text-2xl font-black">{review.amount}</p>
+                    <p className="mt-1 text-base text-slate-700">{review.payment || '—'}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                        {onEditPool && <button type="button" onClick={onEditPool} className="rounded-full bg-slate-100 px-4 py-2 text-base font-semibold text-slate-800">{copy('ရန်ပုံငွေ ပြင်ရန်', 'Change fund')}</button>}
+                        {onEditAmount && <button type="button" onClick={onEditAmount} className="rounded-full bg-slate-100 px-4 py-2 text-base font-semibold text-slate-800">{copy('ပမာဏ ပြင်ရန်', 'Change amount')}</button>}
+                    </div>
+                </div>
+            )}
+            <button type="submit" className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#F59E0B] px-4 py-3.5 text-base font-bold text-[#065F46] shadow-sm transition hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40 disabled:cursor-not-allowed disabled:opacity-60" disabled={donationForm.processing || !!slipError || !!phoneError || paymentMethods.length === 0 || !donationForm.data.slip_image}>
                 {donationForm.processing && <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#065F46]/30 border-t-[#065F46]" aria-hidden="true" />}
                 {donationForm.processing ? copy('တင်သွင်းနေသည်…', 'Submitting…') : copy('လှူဒါန်းမှု အတည်ပြုမည်', 'Confirm donation')}
             </button>
+            {slipError && <p role="alert" className="rounded-xl bg-red-100 p-3 text-base font-semibold text-red-800">{slipError}</p>}
+            {phoneError && <p role="alert" className="text-base font-semibold text-red-100">{phoneError}</p>}
         </form>
     );
 }

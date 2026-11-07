@@ -41,15 +41,17 @@ class HomeController extends Controller
             'financialSummary' => $data['financialSummary'],
             'recentTrips' => $data['recentTrips'],
             'monthlySummary' => $data['monthlySummary'],
+            'expenseBreakdown' => $this->expenseBreakdown(),
         ]);
     }
 
     public function outreach()
     {
-        $data = $this->baseData();
-
         return Inertia::render('Outreach', [
-            'recentTrips' => $data['recentTrips'],
+            'recentTrips' => OutreachTrip::query()
+                ->withSum(['expenses as ledger_spent' => fn ($query) => $query->whereNull('archived_at')], 'amount')
+                ->latest('trip_date')
+                ->get(),
         ]);
     }
 
@@ -92,6 +94,7 @@ class HomeController extends Controller
             ->get();
 
         $recentTrips = OutreachTrip::query()
+            ->withSum(['expenses as ledger_spent' => fn ($query) => $query->whereNull('archived_at')], 'amount')
             ->latest('trip_date')
             ->take(5)
             ->get();
@@ -123,6 +126,27 @@ class HomeController extends Controller
             'financialSummary' => $financialSummary,
             'monthlySummary' => $this->monthlySummary(),
         ];
+    }
+
+    /**
+     * @return array<int, array{category: string, amount: float}>
+     */
+    protected function expenseBreakdown(): array
+    {
+        $totals = Expense::query()
+            ->active()
+            ->selectRaw('category, SUM(amount) as total')
+            ->groupBy('category')
+            ->pluck('total', 'category');
+
+        return collect(Expense::CATEGORIES)
+            ->map(fn (string $category): array => [
+                'category' => $category,
+                'amount' => (float) ($totals[$category] ?? 0),
+            ])
+            ->filter(fn (array $row): bool => $row['amount'] > 0)
+            ->values()
+            ->all();
     }
 
     /**

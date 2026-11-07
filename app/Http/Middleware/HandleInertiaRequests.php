@@ -2,10 +2,13 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Http\Request;
+use App\Models\Donation;
 use App\Models\PaymentMethod;
-use Inertia\Middleware;
+use App\Models\SpotReport;
+use App\Support\PublicSeo;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -50,6 +53,11 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'adminQueue' => fn (): ?array => $request->user()?->isAdmin() ? [
+                'pending_donations' => Donation::query()->where('status', 'pending')->count(),
+                'unread_reports' => SpotReport::query()->where('status', 'unread')->count(),
+            ] : null,
+            'seo' => fn (): ?array => PublicSeo::forRequest($request),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'donation_receipt' => fn () => $request->session()->get('donation_receipt'),

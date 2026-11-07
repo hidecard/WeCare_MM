@@ -1,7 +1,8 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { Globe, HeartHandshake, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import DonationStatusTracker from './DonationStatusTracker';
+import Seo from './Seo';
 
 const navByLang = {
     my: [
@@ -10,6 +11,7 @@ const navByLang = {
         { key: 'impact', label: 'သက်ရောက်မှု', href: route('impact') },
         { key: 'outreach', label: 'လမ်းဘေးကူညီရေး', href: route('outreach') },
         { key: 'community', label: 'အသိုက်အဝန်း', href: route('community') },
+        { key: 'status', label: 'ခြေရာခံ', href: route('donations.status-page') },
     ],
     en: [
         { key: 'home', label: 'Home', href: route('home') },
@@ -17,15 +19,18 @@ const navByLang = {
         { key: 'impact', label: 'Impact', href: route('impact') },
         { key: 'outreach', label: 'Outreach', href: route('outreach') },
         { key: 'community', label: 'Community', href: route('community') },
+        { key: 'status', label: 'Track gift', href: route('donations.status-page') },
     ],
 };
 
 export default function PublicLayout({ children, active = 'home', lang = 'my', setLang }) {
     const [mobileOpen, setMobileOpen] = useState(false);
     const navItems = navByLang[lang] ?? navByLang.my;
+    const { seo } = usePage().props;
 
     return (
         <div className="min-h-screen bg-[#FFFBEB] text-slate-800">
+            <Seo lang={lang} seo={seo} />
             <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-[#F59E0B] focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-[#065F46]">
                 {lang === 'my' ? 'အကြောင်းအရာသို့ ကျော်သွားရန်' : 'Skip to content'}
             </a>
@@ -125,7 +130,7 @@ export default function PublicLayout({ children, active = 'home', lang = 'my', s
                                 <p className="text-[10px] uppercase tracking-[0.2em] text-emerald-100/90">Street outreach</p>
                             </div>
                         </div>
-                        <p className="mt-4 max-w-md text-sm leading-relaxed text-emerald-50/85">
+                        <p className="mt-4 max-w-md text-base leading-relaxed text-emerald-50/85">
                             {lang === 'my'
                                 ? 'လမ်းဘေးရှိ အကူအညီလိုအပ်သော သက်ကြီးရွယ်အိုများအတွက် အစားအစာ၊ ဆေးဝါးနှင့် ဂုဏ်သိက္ခာရှိသော စောင့်ရှောက်မှုကို ယုံကြည်စိတ်ချရစွာ ပေးအပ်ပါသည်။'
                                 : 'Supporting vulnerable elders with food, medicine, and dignity through trusted local outreach and pooled community care.'}
@@ -140,9 +145,6 @@ export default function PublicLayout({ children, active = 'home', lang = 'my', s
                                     {item.label}
                                 </Link>
                             ))}
-                            <Link href={route('donations.status-page')} className="block rounded hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
-                                {lang === 'my' ? 'လှူဒါန်းမှု အခြေအနေ' : 'Donation status'}
-                            </Link>
                             <Link href={route('spot-reports.status-page')} className="block rounded hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
                                 {lang === 'my' ? 'သတင်းပေးမှု အခြေအနေ' : 'Report status'}
                             </Link>

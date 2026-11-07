@@ -12,6 +12,8 @@ class Expense extends Model
 
     protected $fillable = [
         'fund_pool_id',
+        'outreach_trip_id',
+        'is_trip_sync',
         'category',
         'amount',
         'receipt_path',
@@ -26,6 +28,7 @@ class Expense extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'is_trip_sync' => 'boolean',
             'period_start' => 'date',
             'period_end' => 'date',
             'archived_at' => 'datetime',

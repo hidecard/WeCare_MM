@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Expense;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreOutreachTripRequest extends FormRequest
 {
@@ -20,6 +22,7 @@ class StoreOutreachTripRequest extends FormRequest
             'meals_distributed' => ['required', 'integer', 'min:0'],
             'medical_aid_count' => ['required', 'integer', 'min:0'],
             'total_spent' => ['required', 'numeric', 'min:0'],
+            'expense_category' => ['nullable', 'string', Rule::in(Expense::CATEGORIES)],
             'summary_note' => ['nullable', 'string', 'max:2000'],
             'photos' => ['nullable', 'array'],
             'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],

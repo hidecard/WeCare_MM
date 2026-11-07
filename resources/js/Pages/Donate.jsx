@@ -1,4 +1,4 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, ArrowRight, Check, HandCoins, Landmark, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import PublicLayout from '../Components/PublicLayout';
@@ -6,11 +6,12 @@ import DonationFlow from '../Components/DonationFlow';
 import DonationFlowSteps from '../Components/DonationFlowSteps';
 import useLanguage from '../hooks/useLanguage';
 import { saveDonationReceipt } from '../lib/donationReceipts';
+import { myanmarMobileError, normalizeMyanmarMobile } from '../lib/myanmarMobile';
 
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
 const numberFormat = new Intl.NumberFormat('en-MM');
 
-const stepLabels = { my: ['ရွေးချယ်', 'ငွေပေးချေ', 'အတည်ပြု'], en: ['Choose', 'Pay', 'Confirm'] };
+const stepLabels = { my: ['ရန်ပုံငွေ', 'ပမာဏ', 'ငွေပေးချေ'], en: ['Fund', 'Amount', 'Pay'] };
 
 function Stepper({ step, lang }) {
     const labels = stepLabels[lang] ?? stepLabels.en;
@@ -41,6 +42,7 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
     const [showSuccess, setShowSuccess] = useState(false);
     const [submittedReceipt, setSubmittedReceipt] = useState(null);
     const [copiedPayment, setCopiedPayment] = useState(false);
+    const [copiedTracking, setCopiedTracking] = useState(false);
     const [slipPreview, setSlipPreview] = useState('');
     const [slipError, setSlipError] = useState('');
     const [step, setStep] = useState(1);
@@ -75,25 +77,30 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
 
     const handlePoolSelect = (poolId) => {
         setSelectedPoolId(poolId);
-        setStep(1);
         donationForm.setData('fund_pool_id', poolId);
     };
     const handleAmountSelect = (amount) => {
         const next = String(amount ?? '').replace(/[^\d]/g, '');
         setSelectedAmount(next);
-        setStep(1);
         donationForm.setData('amount', next);
     };
     const handlePaymentSelect = (method) => { setSelectedPayment(method); donationForm.setData('payment_method', method); };
 
     const handleSubmit = (event) => {
         event.preventDefault();
+        const phone = normalizeMyanmarMobile(donationForm.data.phone);
+        if (myanmarMobileError(phone, lang)) {
+            donationForm.setData('phone', phone);
+            return;
+        }
+        donationForm.transform((data) => ({ ...data, phone }));
         donationForm.post(route('donations.store'), {
             forceFormData: true,
             onSuccess: (page) => {
                 const receipt = page.props.flash?.donation_receipt;
+                const donorEmail = donationForm.data.donor_email;
                 saveDonationReceipt(receipt);
-                setSubmittedReceipt(receipt);
+                setSubmittedReceipt(receipt ? { ...receipt, donor_email: donorEmail, pool_name: poolName, amount_label: currency.format(amountNum) } : null);
                 donationForm.reset();
                 setStep(1);
                 setSlipPreview('');
@@ -129,29 +136,99 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
         setSlipError('');
     };
 
-    const canNext = (s) => (s === 1 ? fundPools.length > 0 && amountNum >= 1000 : s === 2 ? !!paymentDetails[selectedPayment] : true);
+    const paymentsOpen = Object.keys(paymentDetails).length > 0;
+    const canNext = (currentStep) => {
+        if (!paymentsOpen || fundPools.length === 0) return false;
+        if (currentStep === 1) return Boolean(selectedPoolId);
+        if (currentStep === 2) return amountNum >= 1000;
+        return true;
+    };
+    const copyTrackingId = async () => {
+        if (!submittedReceipt?.tracking_token) return;
+        try {
+            await navigator.clipboard.writeText(submittedReceipt.tracking_token);
+            setCopiedTracking(true);
+        } catch {
+            setCopiedTracking(false);
+        }
+    };
+    const drawTrackingCard = () => {
+        const token = submittedReceipt?.tracking_token;
+        if (!token) return null;
+        const canvas = document.createElement('canvas');
+        canvas.width = 900;
+        canvas.height = 640;
+        const context = canvas.getContext('2d');
+        if (!context) return null;
+        context.fillStyle = '#065F46';
+        context.fillRect(0, 0, 900, 640);
+        context.fillStyle = '#F59E0B';
+        context.fillRect(0, 0, 900, 16);
+        context.fillStyle = '#ffffff';
+        context.font = 'bold 42px sans-serif';
+        context.fillText('WeCare Myanmar', 48, 100);
+        context.font = '28px sans-serif';
+        context.fillStyle = '#D1FAE5';
+        context.fillText(submittedReceipt.pool_name || (lang === 'my' ? 'လှူဒါန်းမှု' : 'Donation'), 48, 170);
+        context.fillStyle = '#F59E0B';
+        context.font = 'bold 48px sans-serif';
+        context.fillText(submittedReceipt.amount_label || '', 48, 250);
+        context.fillStyle = '#ffffff';
+        context.font = '24px sans-serif';
+        context.fillText(lang === 'my' ? 'ခြေရာခံအမှတ်' : 'Tracking ID', 48, 330);
+        context.font = 'bold 22px monospace';
+        const lines = token.match(/.{1,36}/g) || [token];
+        lines.forEach((line, index) => context.fillText(line, 48, 380 + index * 36));
+        return canvas;
+    };
+    const saveTrackingCard = () => {
+        const canvas = drawTrackingCard();
+        if (!canvas) return;
+        const link = document.createElement('a');
+        link.download = 'wecare-donation.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    };
+    const shareTrackingCard = async () => {
+        const canvas = drawTrackingCard();
+        if (!canvas) return;
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+        const file = blob ? new File([blob], 'wecare-donation.png', { type: 'image/png' }) : null;
+        const text = `${submittedReceipt?.pool_name || 'WeCare'} · ${submittedReceipt?.amount_label || ''}`;
+        if (file && navigator.canShare?.({ files: [file] })) {
+            try {
+                await navigator.share({ files: [file], title: 'WeCare Myanmar', text });
+                return;
+            } catch {
+                return;
+            }
+        }
+        saveTrackingCard();
+    };
 
     return (
         <>
-            <Head title={lang === 'my' ? 'လှူဒါန်းရန်' : 'Donate'} />
             <PublicLayout active="donate" lang={lang} setLang={setLang}>
-                <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+                <main className="mx-auto max-w-3xl px-4 py-8 text-base sm:px-6 lg:px-8">
                     <div className="mb-6 flex items-center gap-3">
                         <Link href={route('home')} className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
                             <ArrowLeft className="h-4 w-4" /> {lang === 'my' ? 'မူလသို့' : 'Back home'}
                         </Link>
                     </div>
 
-                    <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
-                        <div className="space-y-4">
-                            <DonationFlow fundPools={fundPools} selectedPoolId={selectedPoolId} selectedAmount={selectedAmount} onPoolSelect={handlePoolSelect} onAmountSelect={handleAmountSelect} lang={lang} />
-                            {fundPools.length > 0 && amountNum >= 1000 && (
-                                <div className="rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-amber-50/60 p-4 shadow-sm">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">{lang === 'my' ? 'သင့်လှူဒါန်းမှု သက်ရောက်မှု' : 'Your impact'}</p>
-                                    <p className="mt-2 text-base font-bold leading-snug text-slate-900">{impactMessage}</p>
-                                </div>
-                            )}
-                        </div>
+                    {!paymentsOpen && (
+                        <p role="alert" className="mb-4 rounded-2xl bg-amber-100 p-4 text-base font-semibold text-amber-950">{lang === 'my' ? 'ငွေပေးချေမှု မဖွင့်ရသေးပါ။ လှူဒါန်းခလုတ်ကို ခဏပိတ်ထားပါတယ်။' : 'Payments are not open yet, so donating is paused.'}</p>
+                    )}
+                    <div className="space-y-4">
+                        {step < 3 && (
+                            <DonationFlow fundPools={fundPools} selectedPoolId={selectedPoolId} selectedAmount={selectedAmount} onPoolSelect={handlePoolSelect} onAmountSelect={handleAmountSelect} lang={lang} focus={step === 1 ? 'pool' : 'amount'} />
+                        )}
+                        {step === 2 && amountNum >= 1000 && (
+                            <div className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">
+                                <p className="text-base font-semibold text-emerald-800">{lang === 'my' ? 'ဒီပမာဏက ကူညီနိုင်သည်' : 'This amount can help'}</p>
+                                <p className="mt-2 text-lg font-bold leading-snug text-slate-900">{impactMessage}</p>
+                            </div>
+                        )}
 
                         <section className="rounded-[2rem] bg-[#065F46] p-5 text-white shadow-lg shadow-emerald-900/20 sm:p-6">
                             <div className="flex items-start justify-between gap-3">
@@ -185,8 +262,8 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                                 )}
                             </div>
 
-                            <DonationFlowSteps
-                                step={step}
+                            {step === 3 && <DonationFlowSteps
+                                step={2}
                                 lang={lang}
                                 paymentDetails={paymentDetails}
                                 selectedPayment={selectedPayment}
@@ -198,15 +275,32 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                                 onSlipChange={handleSlipChange}
                                 slipPreview={slipPreview}
                                 slipError={slipError}
-                                review={step === 3 ? { pool: poolName, amount: currency.format(amountNum), payment: selectedPayment } : null}
-                            />
+                                review={null}
+                            />}
+                            {step === 3 && <DonationFlowSteps
+                                step={3}
+                                lang={lang}
+                                paymentDetails={paymentDetails}
+                                selectedPayment={selectedPayment}
+                                onPaymentSelect={handlePaymentSelect}
+                                onCopyPaymentNumber={copyPaymentNumber}
+                                copiedPayment={copiedPayment}
+                                donationForm={donationForm}
+                                onSubmit={handleSubmit}
+                                onSlipChange={handleSlipChange}
+                                slipPreview={slipPreview}
+                                slipError={slipError}
+                                review={{ pool: poolName, amount: currency.format(amountNum), payment: selectedPayment }}
+                                onEditPool={() => setStep(1)}
+                                onEditAmount={() => setStep(2)}
+                            />}
 
                             <div className="mt-6 flex items-center justify-between gap-3">
                                 <button type="button" onClick={() => setStep((c) => Math.max(1, c - 1))} disabled={step === 1} className="rounded-full border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/30 disabled:opacity-40">
                                     {lang === 'my' ? 'နောက်သို့' : 'Back'}
                                 </button>
                                 {step < 3 && (
-                                    <button type="button" onClick={() => setStep((c) => Math.min(3, c + 1))} disabled={!canNext(step)} className="inline-flex items-center gap-2 rounded-full bg-[#F59E0B] px-5 py-2.5 text-sm font-bold text-[#065F46] transition hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40 disabled:cursor-not-allowed disabled:opacity-50">
+                                    <button type="button" onClick={() => setStep((c) => Math.min(3, c + 1))} disabled={!canNext(step)} className="inline-flex items-center gap-2 rounded-full bg-[#F59E0B] px-6 py-3 text-base font-bold text-[#065F46] transition hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40 disabled:cursor-not-allowed disabled:opacity-50">
                                         {lang === 'my' ? 'ရှေ့ဆက်ရန်' : 'Continue'} <ArrowRight className="h-4 w-4" />
                                     </button>
                                 )}
@@ -241,8 +335,14 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                             <p className="mt-3 text-sm leading-relaxed text-slate-600">{lang === 'my' ? 'ကျေးဇူးတင်ပါသည်။ အဖွဲ့မှ စစ်ဆေးပြီးနောက် အခြေအနေကို အပ်ဒိတ်လုပ်ပါမည်။' : 'Thank you. Our team will review your donation and update the status.'}</p>
                             {submittedReceipt?.tracking_token && (
                                 <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-left ring-1 ring-emerald-100">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">{lang === 'my' ? 'ခြေရာခံ အမှတ်' : 'Tracking ID'}</p>
-                                    <p className="mt-1 break-all font-mono text-sm font-bold text-slate-900">{submittedReceipt.tracking_token}</p>
+                                    <p className="text-base font-semibold text-emerald-800">{lang === 'my' ? 'လှူဒါန်းမှုအမှတ်ကို သိမ်းပါ' : 'Save this tracking ID'}</p>
+                                    <p className="mt-2 break-all font-mono text-base font-bold text-slate-900">{submittedReceipt.tracking_token}</p>
+                                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                                        <button type="button" onClick={copyTrackingId} className="rounded-full bg-white px-4 py-2.5 text-base font-bold text-emerald-800 ring-1 ring-emerald-200">{copiedTracking ? (lang === 'my' ? 'ကူးပြီးပါပြီ' : 'Copied') : (lang === 'my' ? 'အမှတ်ကူးရန်' : 'Copy ID')}</button>
+                                        <button type="button" onClick={saveTrackingCard} className="rounded-full bg-[#065F46] px-4 py-2.5 text-base font-bold text-white">{lang === 'my' ? 'ပုံအဖြစ် သိမ်းရန်' : 'Save as image'}</button>
+                                        <button type="button" onClick={shareTrackingCard} className="rounded-full bg-[#F59E0B] px-4 py-2.5 text-base font-bold text-[#065F46]">{lang === 'my' ? 'Viber / Facebook မှာ ဝေမျှရန်' : 'Share on Viber or Facebook'}</button>
+                                    </div>
+                                    <p className="mt-3 text-base text-slate-700">{submittedReceipt.donor_email ? (lang === 'my' ? 'အတည်ပြုချက်ကို ဒီအီးမေးလ်ဆီ ပို့ပါမယ်။' : 'The review result will be emailed to you.') : (lang === 'my' ? 'အီးမေးလ်မထည့်ရင် ဒီအမှတ်နဲ့ပဲ အခြေအနေပြန်ကြည့်နိုင်ပါတယ်။' : 'Without an email, this ID is the only way to check the status.')}</p>
                                 </div>
                             )}
                             <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">

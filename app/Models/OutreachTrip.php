@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Casts\PublicPhotoPaths;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class OutreachTrip extends Model
 {
@@ -28,4 +30,14 @@ class OutreachTrip extends Model
         'photos_json' => PublicPhotoPaths::class,
         'receipt_images_json' => 'array',
     ];
+
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class);
+    }
+
+    public function syncExpense(): HasOne
+    {
+        return $this->hasOne(Expense::class)->where('is_trip_sync', true);
+    }
 }

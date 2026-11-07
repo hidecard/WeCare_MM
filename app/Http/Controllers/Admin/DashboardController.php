@@ -11,6 +11,7 @@ use App\Models\OutreachTrip;
 use App\Models\SpotReport;
 use App\Models\Volunteer;
 use App\Notifications\DonationReviewedNotification;
+use App\Services\TripExpenseSync;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -20,14 +21,12 @@ use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
+    public function __construct(private TripExpenseSync $tripExpenseSync) {}
+
     public function index()
     {
         return Inertia::render('Admin/Dashboard', [
-            'pendingDonations' => Donation::query()
-                ->where('status', 'pending')
-                ->with('fundPool')
-                ->latest()
-                ->get(),
+            'pendingDonations' => $this->pendingDonations()->get(),
             'spotReports' => SpotReport::query()->latest()->take(5)->get(),
             'fundPools' => FundPool::query()->select('id', 'title_mm', 'title_en', 'unit_cost', 'total_raised')->get(),
             'recentTrips' => OutreachTrip::query()->latest('trip_date')->take(6)->get(),
@@ -42,11 +41,7 @@ class DashboardController extends Controller
     public function donationsIndex()
     {
         return Inertia::render('Admin/Donations', [
-            'pendingDonations' => Donation::query()
-                ->where('status', 'pending')
-                ->with('fundPool')
-                ->latest()
-                ->paginate(10),
+            'pendingDonations' => $this->pendingDonations()->paginate(10),
         ]);
     }
 
@@ -88,7 +83,11 @@ class DashboardController extends Controller
     public function tripsIndex()
     {
         return Inertia::render('Admin/Trips', [
-            'trips' => OutreachTrip::query()->latest('trip_date')->paginate(10),
+            'trips' => OutreachTrip::query()
+                ->with('syncExpense')
+                ->withSum(['expenses as ledger_spent' => fn ($query) => $query->whereNull('archived_at')], 'amount')
+                ->latest('trip_date')
+                ->paginate(10),
         ]);
     }
 
@@ -163,6 +162,7 @@ class DashboardController extends Controller
             'title_mm' => ['required', 'string', 'max:255'],
             'title_en' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'description_mm' => ['nullable', 'string', 'max:255'],
             'unit_cost' => ['required', 'integer', 'min:1000'],
             'is_active' => ['boolean'],
         ]);
@@ -171,6 +171,7 @@ class DashboardController extends Controller
             'title_mm' => $data['title_mm'],
             'title_en' => $data['title_en'],
             'description' => $data['description'] ?? null,
+            'description_mm' => $data['description_mm'] ?? null,
             'unit_cost' => (int) $data['unit_cost'],
             'total_raised' => 0,
             'is_active' => $data['is_active'] ?? true,
@@ -193,6 +194,7 @@ class DashboardController extends Controller
             'title_mm' => ['required', 'string', 'max:255'],
             'title_en' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'description_mm' => ['nullable', 'string', 'max:255'],
             'unit_cost' => ['required', 'integer', 'min:1000'],
             'is_active' => ['boolean'],
         ]);
@@ -201,6 +203,7 @@ class DashboardController extends Controller
             'title_mm' => $data['title_mm'],
             'title_en' => $data['title_en'],
             'description' => $data['description'] ?? null,
+            'description_mm' => $request->exists('description_mm') ? ($data['description_mm'] ?? null) : $fundPool->description_mm,
             'unit_cost' => (int) $data['unit_cost'],
             'is_active' => $data['is_active'] ?? $fundPool->is_active,
         ]);
@@ -336,7 +339,7 @@ class DashboardController extends Controller
         $photos = $this->storeImageSet($request->file('photos', []), 'trip-photos');
         $receiptImages = $this->storeImageSet($request->file('receipt_images', []), 'trip-receipts');
 
-        OutreachTrip::query()->create([
+        $trip = OutreachTrip::query()->create([
             'trip_date' => $request->input('trip_date'),
             'township' => $request->input('township'),
             'elderly_helped_count' => (int) $request->input('elderly_helped_count'),
@@ -348,6 +351,8 @@ class DashboardController extends Controller
             'receipt_images_json' => $receiptImages,
         ]);
 
+        $this->tripExpenseSync->sync($trip, $request->user()?->id, $request->input('expense_category'));
+
         return redirect()->back()->with('success', 'Street outreach trip saved successfully.');
     }
 
@@ -355,6 +360,9 @@ class DashboardController extends Controller
     {
         $photos = $this->storeImageSet($request->file('photos', []), 'trip-photos');
         $receiptImages = $this->storeImageSet($request->file('receipt_images', []), 'trip-receipts');
+
+        $existingPhotos = $outreachTrip->photos_json;
+        $existingReceipts = is_array($outreachTrip->receipt_images_json) ? $outreachTrip->receipt_images_json : [];
 
         $outreachTrip->update([
             'trip_date' => $request->input('trip_date'),
@@ -364,9 +372,11 @@ class DashboardController extends Controller
             'medical_aid_count' => (int) $request->input('medical_aid_count'),
             'total_spent' => $request->input('total_spent'),
             'summary_note' => $request->input('summary_note'),
-            'photos_json' => $photos !== [] ? $photos : $outreachTrip->photos_json,
-            'receipt_images_json' => $receiptImages !== [] ? $receiptImages : $outreachTrip->receipt_images_json,
+            'photos_json' => $photos === [] ? $existingPhotos : array_values(array_unique([...$existingPhotos, ...$photos])),
+            'receipt_images_json' => $receiptImages === [] ? $existingReceipts : array_values(array_unique([...$existingReceipts, ...$receiptImages])),
         ]);
+
+        $this->tripExpenseSync->sync($outreachTrip->refresh(), $request->user()?->id, $request->input('expense_category'));
 
         return redirect()->back()->with('success', 'Street outreach trip updated successfully.');
     }
@@ -388,6 +398,15 @@ class DashboardController extends Controller
         }
 
         return $paths;
+    }
+
+    protected function pendingDonations()
+    {
+        return Donation::query()
+            ->where('status', 'pending')
+            ->with('fundPool')
+            ->orderByRaw("case when phone is null or trim(phone) = '' then 1 else 0 end")
+            ->oldest();
     }
 
     protected function generateCertificateCode(): string

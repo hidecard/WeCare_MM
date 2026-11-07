@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { ArrowLeft, CheckCircle2, Clock3, Search, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import PublicLayout from '../Components/PublicLayout';
@@ -57,6 +57,30 @@ export default function DonationStatus() {
         lookup(token);
     }, []);
 
+    useEffect(() => {
+        if (result?.status !== 'pending' || !lastLookup) {
+            return undefined;
+        }
+
+        const token = lastLookup;
+        const timer = window.setInterval(async () => {
+            try {
+                const response = await fetch(route('donations.status', token), {
+                    headers: { Accept: 'application/json' },
+                    cache: 'no-store',
+                });
+                if (!response.ok) {
+                    return;
+                }
+                setResult(await response.json());
+            } catch {
+                // Keep the last known status until the next check.
+            }
+        }, 12000);
+
+        return () => window.clearInterval(timer);
+    }, [result?.status, lastLookup]);
+
     const handleSubmit = async (event) => {
         event.preventDefault();
         await lookup(trackingToken.trim());
@@ -73,7 +97,6 @@ export default function DonationStatus() {
 
     return (
         <>
-            <Head title={copy('လှူဒါန်းမှုအခြေအနေ', 'Donation status')} />
             <PublicLayout active="status" lang={lang} setLang={setLang}>
                 <main className="mx-auto max-w-3xl px-4 py-8 pb-24 sm:px-6 lg:px-8">
                     <Link href={route('home')} className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200">
@@ -121,8 +144,8 @@ export default function DonationStatus() {
                                 <div className="rounded-2xl bg-emerald-50 p-4"><p className="text-xs text-emerald-700">{copy('လှူဒါန်းပမာဏ', 'Amount')}</p><p className="mt-1 text-xl font-black text-slate-900">{currency.format(Number(result.amount) || 0)}</p></div>
                                 <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs text-slate-600">{copy('လှူဒါန်းမှုအမှတ်', 'Tracking ID')}</p><p className="mt-1 break-all font-mono text-sm font-bold text-slate-900">{trackingToken.trim()}</p></div>
                             </div>
-                            <p className="mt-5 text-sm text-slate-600">
-                                {status === 'approved' ? copy('လှူဒါန်းမှုကို အတည်ပြုပြီးပါပြီ။ ကျေးဇူးတင်လွှာ ရရှိနိုင်ပါပြီ။', 'Your donation has been approved. Your appreciation certificate is available.') : status === 'rejected' ? copy('အသေးစိတ်အတွက် WeCare အဖွဲ့ကို ဆက်သွယ်ပါ။', 'Please contact the WeCare team for more details.') : copy('အဖွဲ့မှ ငွေလွှဲပြေစာကို စစ်ဆေးနေပါသည်။ အတည်ပြုပြီးပါက ဤနေရာတွင် update ဖြစ်ပါမည်။', 'The team is reviewing your payment slip. This page will show the updated status after review.')}
+                            <p className="mt-5 text-base text-slate-600">
+                                {status === 'approved' ? copy('လှူဒါန်းမှုကို အတည်ပြုပြီးပါပြီ။ ကျေးဇူးတင်လွှာ ရရှိနိုင်ပါပြီ။', 'Your donation has been approved. Your appreciation certificate is available.') : status === 'rejected' ? copy('အသေးစိတ်အတွက် WeCare အဖွဲ့ကို ဆက်သွယ်ပါ။', 'Please contact the WeCare team for more details.') : copy('အဖွဲ့မှ ငွေလွှဲပြေစာကို စစ်ဆေးနေပါသည်။ စစ်ဆေးဆဲဖြစ်နေသရွေ့ ဤစာမျက်နှာက အခြေအနေကို ကိုယ်တိုင် ပြန်စစ်ပါမည်။', 'The team is reviewing your payment slip. This page keeps checking while the donation is under review.')}
                             </p>
                             {result.review_note && (
                                 <div className="mt-4 rounded-2xl bg-amber-50 p-4">

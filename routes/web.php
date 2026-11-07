@@ -44,6 +44,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/trips', [DashboardController::class, 'tripsIndex'])->name('admin.trips.index');
     Route::get('/admin/reports', [DashboardController::class, 'spotReportsIndex'])->name('admin.reports.index');
     Route::patch('/admin/reports/{spotReport}', [DashboardController::class, 'updateSpotReport'])->name('admin.reports.update');
+    Route::get('/admin/reports/{spotReport}/photo', [SpotReportController::class, 'downloadPhoto'])->name('admin.reports.photo');
     Route::get('/admin/payment-methods', [PaymentMethodController::class, 'index'])->name('admin.payment-methods.index');
     Route::patch('/admin/donations/{donation}/status', [DashboardController::class, 'updateDonationStatus'])->name('admin.donations.update-status');
     Route::post('/admin/outreach-trips', [DashboardController::class, 'storeOutreachTrip'])->name('admin.outreach-trips.store');

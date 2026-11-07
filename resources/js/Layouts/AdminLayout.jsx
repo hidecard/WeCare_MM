@@ -30,7 +30,13 @@ export const ADMIN_NAV_ITEMS = [
 
 export default function AdminLayout({ title, subtitle = 'WeCare Admin', heading, actions, children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const { url } = usePage();
+    const { url, props } = usePage();
+    const adminQueue = props.adminQueue ?? {};
+    const queueCount = (routeName) => {
+        if (routeName === 'admin.donations.index') return Number(adminQueue.pending_donations) || 0;
+        if (routeName === 'admin.reports.index') return Number(adminQueue.unread_reports) || 0;
+        return 0;
+    };
 
     const isActive = (routeName) => {
         try {
@@ -70,6 +76,7 @@ export default function AdminLayout({ title, subtitle = 'WeCare Admin', heading,
                             {ADMIN_NAV_ITEMS.map(({ name, routeName, icon: Icon }) => {
                                 const href = route(routeName);
                                 const active = isActive(routeName);
+                                const waiting = queueCount(routeName);
                                 return (
                                     <Link
                                         key={routeName}
@@ -79,7 +86,10 @@ export default function AdminLayout({ title, subtitle = 'WeCare Admin', heading,
                                         className={`flex items-center justify-between rounded-2xl border px-3 py-3 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 ${active ? 'border-emerald-300/30 bg-emerald-500/15 text-white shadow-inner shadow-emerald-900/20' : 'border-white/10 bg-white/5 text-emerald-50/85 hover:bg-white/10 hover:text-white'}`}
                                     >
                                         <span className="flex items-center gap-3"><Icon className="h-4 w-4 shrink-0" />{name}</span>
-                                        <ChevronRight className={`h-4 w-4 ${active ? 'text-emerald-100' : 'text-emerald-200/70'}`} />
+                                        <span className="flex items-center gap-2">
+                                            {waiting > 0 && <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-[#F59E0B] px-2 py-0.5 text-xs font-black text-[#065F46]" aria-label={`${waiting} waiting`}>{waiting}</span>}
+                                            <ChevronRight className={`h-4 w-4 ${active ? 'text-emerald-100' : 'text-emerald-200/70'}`} />
+                                        </span>
                                     </Link>
                                 );
                             })}

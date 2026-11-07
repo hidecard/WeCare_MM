@@ -2,7 +2,9 @@
 
 WeCare Myanmar is a community-powered street outreach platform for supporting vulnerable elderly people in Myanmar. The project connects donors, field volunteers, and the outreach team in one place so that people can report someone who needs help, contribute through local mobile-payment channels, join volunteer work, and see how outreach funds are being used.
 
-> **Project status:** Early-stage MVP. The core public flows and admin operations are implemented, but the production checklist in [`TODO.md`](TODO.md) must be completed before handling real donations at scale.
+**Live site:** [https://wecare.spacetikapp.com/](https://wecare.spacetikapp.com/)
+
+> **Project status:** The public website is live. Donors can give through local payment accounts, the community can send a short spot report, and the impact and outreach pages read from recorded donations, expenses, and trips. Operational follow-up remains in [`TODO.md`](TODO.md).
 
 [![CI](https://github.com/hidecard/WeCare_MM/actions/workflows/ci.yml/badge.svg)](https://github.com/hidecard/WeCare_MM/actions/workflows/ci.yml)
 
@@ -14,14 +16,14 @@ WeCare Myanmar ရဲ့ ရည်ရွယ်ချက်က လမ်းဘေ
 
 The public website provides a bilingual Burmese/English experience with the following flows:
 
-- **Donation:** Select a fund pool, choose an amount, select a local payment method, upload a payment slip, and submit the donation for manual review.
-- **Community spot report:** Send a township, landmark, time, condition description, and optional phone number to the outreach team.
+- **Donation:** Choose a fund, enter an amount, pay through a local account, and upload a slip. The tracking page stays visible after submit and refreshes while the gift is pending. A short account number is flagged before it can be copied. Optional email receives the review result.
+- **Community spot report:** Send a township, place, one photo, and an optional phone number that starts with `09`. The success link opens a tracking page that refreshes until the report is resolved.
 - **Volunteer registration:** Submit contact and availability information to join the field team.
-- **Impact:** View high-level outreach totals including elders helped, meals distributed, medical aid, townships reached, received funds, and spent funds.
-- **Outreach activity:** View published outreach trips, photos, service counts, and summaries.
+- **Impact:** View this month’s approved donations, expenses, balance, and trips, plus an expense breakdown by category and a six-month summary. Empty totals say recording has started.
+- **Outreach activity:** View every published trip photo, township, Myanmar date, people helped, and the amount recorded in the expense ledger.
 - **Donation certificate:** Approved donations can receive a certificate download link protected by the donation certificate code.
 
-The private admin area provides donation review, fund-pool management, volunteer management, outreach-trip management, spot-report review, uploaded slip access, and operational summary cards.
+Public pages include a title, description, canonical URL, and social preview. Tracking, certificate, and error pages ask search engines not to index them. The private admin area provides donation review, the expense ledger, fund-pool management, volunteer management, outreach-trip management, spot-report review, uploaded slip access, and queue badges for pending gifts and unread reports.
 
 ## Technology stack
 
@@ -39,8 +41,11 @@ The private admin area provides donation review, fund-pool management, volunteer
 app/
   Http/Controllers/        Public, auth, and admin controllers
   Http/Middleware/         Inertia and admin authorization middleware
-  Http/Requests/            Validation rules for public forms and uploads
-  Models/                   Donation, fund pool, trip, report, volunteer, user
+  Http/Requests/           Validation rules for public forms and uploads
+  Rules/                   Shared field rules such as Myanmar mobile numbers
+  Services/                Trip cost sync into the expense ledger
+  Support/                 Public page title and description data
+  Models/                  Donation, fund pool, expense, trip, report, volunteer, user
 database/
   migrations/               Users, outreach, donation, and role schema
   seeders/                  Local/test seed data
@@ -179,9 +184,9 @@ Production deployments intentionally do not run the seeder. The deploy workflow 
 
 ## Donation flow and safety notes
 
-The current payment workflow is manual-transfer based. A donor chooses a payment method, completes the transfer outside the application, uploads a slip, and waits for an admin reviewer to approve or reject the donation. Approval is transactional and protected against repeat review double-counting.
+The live payment workflow is manual-transfer based. A donor chooses a payment method, completes the transfer outside the application, uploads a slip, and waits for an admin reviewer to approve or reject the donation. Approval is transactional and protected against repeat review double-counting. Review notes appear on the tracking page, and an email is sent only when the donor entered one.
 
-Before real public fundraising, replace the demo payment details and placeholder QR visuals with verified organization-owned accounts and real QR assets. Add payment reference numbers, duplicate-slip detection, reviewer notes, donor notifications, and a proper financial ledger. These items are tracked in [`TODO.md`](TODO.md).
+Payment accounts and QR images are managed in **Admin → Payment Methods**. Trip spending is written into the same expense ledger that the public totals use. Remaining operational items stay in [`TODO.md`](TODO.md).
 
 ## Testing and CI
 

@@ -1,6 +1,7 @@
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 import { toBlob } from 'html-to-image';
+import Seo from '../Components/Seo';
 import useLanguage from '../hooks/useLanguage';
 
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
@@ -45,7 +46,7 @@ export default function DonationCertificate({ donation = {} }) {
 
     return (
         <>
-            <Head title={lang === 'my' ? 'လှူဒါန်းမှု Certificate' : 'Donation Certificate'} />
+            <Seo lang={lang} />
             <main className="min-h-screen bg-[#edf4ef] px-3 py-5 sm:px-6 sm:py-8">
                 <div className="mx-auto max-w-5xl">
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3 font-sans">

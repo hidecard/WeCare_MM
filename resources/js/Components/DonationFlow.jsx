@@ -21,8 +21,11 @@ export default function DonationFlow({
     onAmountSelect,
     lang = 'my',
     compact = false,
+    focus = 'all',
 }) {
     const copy = (myanmar, english) => (lang === 'my' ? myanmar : english);
+    const showPools = focus !== 'amount';
+    const showAmount = focus !== 'pool';
     const amountNum = Number(selectedAmount) || 0;
     const amountInvalid = amountNum > 0 && amountNum < 1000;
 
@@ -31,12 +34,12 @@ export default function DonationFlow({
             <div className="flex items-center gap-3">
                 <div className="rounded-2xl bg-amber-100 p-3 text-amber-700"><HandCoins className="h-5 w-5" /></div>
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-700">{copy('အဆင့် ၁', 'Step 1')}</p>
-                    <h2 className="mt-1 text-xl font-black text-slate-900 sm:text-2xl">{copy('ကူညီမည့် အပိုင်းကို ရွေးပါ', 'Choose where to help')}</h2>
+                    <p className="text-base font-semibold text-amber-700">{focus === 'amount' ? copy('အဆင့် ၂', 'Step 2') : copy('အဆင့် ၁', 'Step 1')}</p>
+                    <h2 className="mt-1 text-2xl font-black text-slate-900">{focus === 'amount' ? copy('ပမာဏ ရွေးပါ', 'Choose an amount') : copy('ကူညီမည့် အပိုင်းကို ရွေးပါ', 'Choose where to help')}</h2>
                 </div>
             </div>
 
-            <div className={`mt-5 grid gap-3 ${fundPools.length > 2 ? 'sm:grid-cols-2' : ''}`} role="radiogroup" aria-label={copy('ရန်ပုံငွေ ရွေးချယ်ရန်', 'Choose a fund pool')}>
+            {showPools && <div className={`mt-5 grid gap-3 ${fundPools.length > 2 ? 'sm:grid-cols-2' : ''}`} role="radiogroup" aria-label={copy('ရန်ပုံငွေ ရွေးချယ်ရန်', 'Choose a fund pool')}>
                 {fundPools.map((pool) => {
                     const selected = Number(selectedPoolId) === Number(pool.id);
                     const Icon = poolIcon(pool);
@@ -60,7 +63,7 @@ export default function DonationFlow({
                                 </div>
                                 <div className="min-w-0">
                                     <p className="font-bold leading-snug text-slate-900">{lang === 'my' ? (pool.title_mm || pool.title_en) : (pool.title_en || pool.title_mm)}</p>
-                                    {pool.description ? <p className="mt-1 text-sm leading-relaxed text-slate-600">{pool.description}</p> : null}
+                                    {(lang === 'my' ? (pool.description_mm || '') : (pool.description || '')) ? <p className="mt-1 text-base leading-relaxed text-slate-600">{lang === 'my' ? pool.description_mm : pool.description}</p> : null}
                                     <p className="mt-2 text-xs font-semibold text-emerald-700">{copy('တစ်စုံလျှင်', 'Per unit')} · {currency.format(Number(pool.unit_cost || 0))}</p>
                                 </div>
                             </div>
@@ -73,10 +76,10 @@ export default function DonationFlow({
                         <p className="mt-1 text-sm text-slate-600">{copy('ကျေးဇူးပြု၍ နောက်မှ ပြန်ကြိုးစားပါ။ မကြာမီ ကူညီရေးအစီအစဉ်များ စတင်ပါမည်။', 'Please try again later. New outreach funds will open soon.')}</p>
                     </div>
                 )}
-            </div>
+            </div>}
 
-            <div className="mt-6">
-                <p className="text-sm font-semibold text-slate-800">{copy('ပမာဏ ရွေးပါ', 'Choose amount')}</p>
+            {showAmount && <div className="mt-6">
+                <p className="text-base font-semibold text-slate-800">{copy('ပမာဏ ရွေးပါ', 'Choose amount')}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                     {presetAmounts.map((amount) => {
                         const active = Number(selectedAmount) === amount;
@@ -103,11 +106,11 @@ export default function DonationFlow({
                             aria-describedby={`${compact ? 'home' : 'donate'}-amount-help`}
                         />
                     </div>
-                    <p id={`${compact ? 'home' : 'donate'}-amount-help`} className={`mt-2 text-xs ${amountInvalid ? 'font-semibold text-red-700' : 'text-slate-600'}`} role={amountInvalid ? 'alert' : undefined}>
+                    <p id={`${compact ? 'home' : 'donate'}-amount-help`} className={`mt-2 text-base ${amountInvalid ? 'font-semibold text-red-700' : 'text-slate-600'}`} role={amountInvalid ? 'alert' : undefined}>
                         {amountInvalid ? copy('အနည်းဆုံး ၁,၀၀၀ ကျပ် လိုအပ်ပါသည်။', 'Minimum amount is MMK 1,000.') : copy('အနည်းဆုံး ၁,၀၀၀ ကျပ်', 'Minimum MMK 1,000')}
                     </p>
                 </div>
-            </div>
+            </div>}
         </section>
     );
 }
