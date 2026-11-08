@@ -29,7 +29,7 @@ class MyanmarMobileNumber implements ValidationRule
         }
 
         if (! preg_match('/^09\d{7,9}$/', $digits)) {
-            $fail('09 ဖြင့် စသော ဖုန်းနံပါတ် ထည့်ပါ။');
+            $fail('Enter a mobile number that starts with 09.');
         }
     }
 }

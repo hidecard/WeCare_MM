@@ -31,6 +31,7 @@ it('rejects a donation phone that does not start with 09', function () {
         'payment_method' => 'PhoneCheckPay',
         'phone' => '0812345678',
         'slip_image' => UploadedFile::fake()->image('slip.jpg'),
+        'information_confirmed' => true,
     ])->assertSessionHasErrors('phone');
 
     expect(Donation::query()->count())->toBe(0);
@@ -58,6 +59,7 @@ it('stores a spaced donation phone as digits', function () {
         'payment_method' => 'PhoneNormalizePay',
         'phone' => '09 912 345 678',
         'slip_image' => UploadedFile::fake()->image('slip.jpg'),
+        'information_confirmed' => true,
     ])->assertRedirect();
 
     expect(Donation::query()->firstOrFail()->phone)->toBe('09912345678');

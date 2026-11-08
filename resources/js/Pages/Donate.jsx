@@ -221,8 +221,8 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                         <p role="alert" className="mb-4 rounded-2xl bg-amber-100 p-4 text-base font-semibold text-amber-950">{lang === 'my' ? 'ငွေပေးချေမှု မဖွင့်ရသေးပါ။ လှူဒါန်းခလုတ်ကို ခဏပိတ်ထားပါတယ်။' : 'Payments are not open yet, so donating is paused.'}</p>
                     )}
                     <div className="space-y-4">
-                        {step < 3 && (
-                            <DonationFlow fundPools={fundPools} selectedPoolId={selectedPoolId} selectedAmount={selectedAmount} onPoolSelect={handlePoolSelect} onAmountSelect={handleAmountSelect} lang={lang} focus={step === 1 ? 'pool' : 'amount'} />
+                        {step === 1 && (
+                            <DonationFlow fundPools={fundPools} selectedPoolId={selectedPoolId} selectedAmount={selectedAmount} onPoolSelect={handlePoolSelect} onAmountSelect={handleAmountSelect} lang={lang} focus="all" />
                         )}
                         {step === 2 && amountNum >= 1000 && (
                             <div className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">

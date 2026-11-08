@@ -42,6 +42,7 @@ it('lets a donor track a submitted donation and access the certificate after app
         'phone' => '09912345678',
         'is_anonymous' => false,
         'slip_image' => UploadedFile::fake()->image('slip.jpg'),
+        'information_confirmed' => true,
     ])->assertRedirect()->assertSessionHas('donation_receipt', function (array $receipt): bool {
         return $receipt['donor_name'] === 'Test Donor'
             && $receipt['amount'] === '25000.00'

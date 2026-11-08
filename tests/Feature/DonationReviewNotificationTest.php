@@ -30,6 +30,7 @@ it('emails the donor and shows the review reason on the tracking page', function
         'donor_email' => 'donor@example.com',
         'phone' => '09900000001',
         'slip_image' => UploadedFile::fake()->image('slip.jpg'),
+        'information_confirmed' => true,
     ])->assertRedirect();
 
     $donation = Donation::query()->firstOrFail();
