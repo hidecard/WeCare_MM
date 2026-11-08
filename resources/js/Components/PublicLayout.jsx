@@ -7,6 +7,7 @@ import Seo from './Seo';
 const navByLang = {
     my: [
         { key: 'home', label: 'မူလ', href: route('home') },
+        { key: 'about', label: 'အကြောင်း', href: route('about') },
         { key: 'donate', label: 'လှူဒါန်းရန်', href: route('donate') },
         { key: 'impact', label: 'သက်ရောက်မှု', href: route('impact') },
         { key: 'outreach', label: 'လမ်းဘေးကူညီရေး', href: route('outreach') },
@@ -15,6 +16,7 @@ const navByLang = {
     ],
     en: [
         { key: 'home', label: 'Home', href: route('home') },
+        { key: 'about', label: 'About', href: route('about') },
         { key: 'donate', label: 'Donate', href: route('donate') },
         { key: 'impact', label: 'Impact', href: route('impact') },
         { key: 'outreach', label: 'Outreach', href: route('outreach') },
@@ -29,7 +31,7 @@ export default function PublicLayout({ children, active = 'home', lang = 'my', s
     const { seo } = usePage().props;
 
     return (
-        <div className="min-h-screen bg-[#FFFBEB] text-slate-800">
+        <div lang={lang === 'my' ? 'my' : 'en'} className="min-h-screen bg-[#FFFBEB] text-slate-800">
             <Seo lang={lang} seo={seo} />
             <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-[#F59E0B] focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-[#065F46]">
                 {lang === 'my' ? 'အကြောင်းအရာသို့ ကျော်သွားရန်' : 'Skip to content'}

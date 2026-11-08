@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/donate', [HomeController::class, 'donate'])->name('donate');
 Route::get('/impact', [HomeController::class, 'impact'])->name('impact');
 Route::get('/outreach', [HomeController::class, 'outreach'])->name('outreach');

@@ -15,6 +15,7 @@ class PublicSeo
 
         return match ($route) {
             'home' => self::page('home', 'home', true, true),
+            'about' => self::page('about', 'about', true),
             'donate' => self::page('donate', 'donate', true),
             'impact' => self::page('impact', 'impact', true),
             'outreach' => self::page('outreach', 'outreach', true),
@@ -97,6 +98,13 @@ class PublicSeo
                 'description' => [
                     'my' => 'ရန်ပုံငွေရွေးပါ၊ ပမာဏသတ်မှတ်ပါ၊ ငွေလွှဲပြေစာတင်ပြီး သက်ကြီးရွယ်အိုများအတွက် တိုက်ရိုက်လှူဒါန်းပါ။',
                     'en' => 'Choose a fund, set an amount, and upload your payment slip to support elders directly.',
+                ],
+            ],
+            'about' => [
+                'title' => ['my' => 'ကျွန်ုပ်တို့အကြောင်း', 'en' => 'About WeCare'],
+                'description' => [
+                    'my' => 'WeCare Myanmar ၏ ရည်မှန်းချက်၊ မျှော်မှန်းချက်၊ တန်ဖိုးထားမှုများနှင့် တည်ထောင်ရသည့် အကြောင်းရင်းကို လေ့လာပါ။',
+                    'en' => 'Learn about WeCare Myanmar’s goal, mission, vision, values, and why it was founded.',
                 ],
             ],
             'impact' => [

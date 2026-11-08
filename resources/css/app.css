@@ -12,14 +12,48 @@
         line-height: 1.75;
         text-rendering: optimizeLegibility;
         -webkit-font-smoothing: antialiased;
+        -webkit-text-size-adjust: 100%;
     }
 
-    :lang(my) body,
-    :lang(my) {
-        line-height: 1.95;
-        word-break: keep-all;
-        overflow-wrap: anywhere;
+    /* Myanmar: prevent overlapping glyphs (ascenders/descenders/stacked marks). */
+    :lang(my),
+    :lang(my) body {
+        line-height: 1.9;
+        word-break: normal;
+        overflow-wrap: break-word;
+        font-feature-settings: "kern" 1, "liga" 1;
     }
+
+    :lang(my) p,
+    :lang(my) li,
+    :lang(my) dd,
+    :lang(my) dt,
+    :lang(my) label,
+    :lang(my) a,
+    :lang(my) button,
+    :lang(my) input,
+    :lang(my) textarea,
+    :lang(my) select,
+    :lang(my) option,
+    :lang(my) th,
+    :lang(my) td {
+        line-height: inherit;
+    }
+
+    :lang(my) h1, :lang(my) h2, :lang(my) h3, :lang(my) h4, :lang(my) h5, :lang(my) h6 {
+        line-height: 1.45;
+    }
+
+    /* Normalize cramped Tailwind leading utilities for Myanmar script. */
+    :lang(my) .leading-none { line-height: 1.45 !important; }
+    :lang(my) .leading-tight { line-height: 1.55 !important; }
+    :lang(my) .leading-snug { line-height: 1.65 !important; }
+    :lang(my) .leading-normal { line-height: 1.8 !important; }
+
+    /* Give small/badge text breathing room so stacked marks don't collide. */
+    :lang(my) .text-xs { line-height: 1.7; }
+    :lang(my) .text-sm { line-height: 1.8; }
+    :lang(my) .text-\[10px\] { line-height: 1.8; }
 
     h1, h2, h3, h4, h5, h6 {
         line-height: 1.3;
