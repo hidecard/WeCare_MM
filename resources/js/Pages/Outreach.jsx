@@ -103,7 +103,7 @@ export default function Outreach({ recentTrips = [], townships = [], filters = {
                                                     onClick={() => setViewer({ photos: tripPhotos, index, township: trip.township })}
                                                     className={`overflow-hidden bg-slate-100 ${tripPhotos.length > 2 && index === 0 ? 'col-span-2' : ''}`}
                                                 >
-                                                    <img src={photoUrl(photo)} alt={trip.township} className={`w-full object-cover ${tripPhotos.length === 1 ? 'h-80' : index === 0 && tripPhotos.length > 2 ? 'h-72' : 'h-44'}`} />
+                                                    <img src={photoUrl(photo)} alt={trip.township} loading={index === 0 ? 'eager' : 'lazy'} decoding="async" fetchPriority={index === 0 ? 'low' : undefined} className={`w-full object-cover ${tripPhotos.length === 1 ? 'h-80' : index === 0 && tripPhotos.length > 2 ? 'h-72' : 'h-44'}`} />
                                                 </button>
                                             ))}
                                         </div>
@@ -140,7 +140,7 @@ export default function Outreach({ recentTrips = [], townships = [], filters = {
                     {viewer && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 p-4" onClick={() => setViewer(null)}>
                             <div className="w-full max-w-4xl" onClick={(event) => event.stopPropagation()}>
-                                <img src={photoUrl(viewer.photos[viewer.index])} alt={viewer.township} className="max-h-[75vh] w-full rounded-3xl bg-black object-contain" />
+                                <img src={photoUrl(viewer.photos[viewer.index])} alt={viewer.township} loading="eager" decoding="async" className="max-h-[75vh] w-full rounded-3xl bg-black object-contain" />
                                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-white">
                                     <p className="text-base font-semibold">{viewer.township} · {viewer.index + 1} / {viewer.photos.length}</p>
                                     <div className="flex gap-2">

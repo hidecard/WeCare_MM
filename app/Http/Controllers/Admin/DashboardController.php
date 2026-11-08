@@ -79,9 +79,13 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function downloadDonationSlip(Donation $donation)
+    public function downloadDonationSlip(Request $request, Donation $donation)
     {
         abort_unless($donation->slip_image_path && Storage::disk('local')->exists($donation->slip_image_path), 404);
+
+        if ($request->boolean('inline')) {
+            return Storage::disk('local')->response($donation->slip_image_path);
+        }
 
         return Storage::disk('local')->download($donation->slip_image_path);
     }
@@ -175,18 +179,13 @@ class DashboardController extends Controller
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
         ]);
-        $query = SpotReport::query()->latest()
-            ->when($filters['township'] ?? null, fn ($builder, $township) => $builder->where('township', $township))
-            ->when(($filters['status'] ?? null) && $filters['status'] !== 'all', fn ($builder) => $builder->where('status', $filters['status']))
-            ->when(($filters['urgency'] ?? null) && $filters['urgency'] !== 'all', fn ($builder) => $builder->where('urgency', $filters['urgency']))
-            ->when($filters['assigned_to'] ?? null, fn ($builder, $assignedTo) => $builder->where('assigned_to', 'like', "%{$assignedTo}%"))
-            ->when($filters['date_from'] ?? null, fn ($builder, $date) => $builder->whereDate('created_at', '>=', $date))
-            ->when($filters['date_to'] ?? null, fn ($builder, $date) => $builder->whereDate('created_at', '<=', $date));
+        $query = $this->spotReportListQuery($filters);
 
         return Inertia::render('Admin/Reports', [
             'spotReports' => $query->paginate(10)->withQueryString(),
             'filters' => $filters,
             'townships' => SpotReport::query()->select('township')->distinct()->orderBy('township')->pluck('township')->values(),
+            'auditTrail' => $this->spotReportAuditTrail(15),
         ]);
     }
 
@@ -214,6 +213,81 @@ class DashboardController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Spot report workflow updated successfully.');
+    }
+
+    public function exportSpotReports(Request $request): StreamedResponse
+    {
+        $filters = $request->validate([
+            'township' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', 'in:all,unread,checked,in_progress,resolved'],
+            'urgency' => ['nullable', 'in:all,low,normal,high,urgent'],
+            'assigned_to' => ['nullable', 'string', 'max:255'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+        ]);
+        $query = $this->spotReportListQuery($filters);
+        $filename = 'spot-reports-'.now()->format('Ymd-His').'.csv';
+
+        return response()->streamDownload(function () use ($query): void {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Submitted at', 'Reference', 'Township', 'Landmark', 'Time seen', 'Status', 'Urgency', 'Assigned to', 'Reporter phone', 'Follow-up note', 'Condition note']);
+            $query->chunkById(200, function ($reports) use ($out): void {
+                foreach ($reports as $r) {
+                    fputcsv($out, [
+                        $r->created_at?->toDateTimeString(),
+                        $r->reference_code,
+                        $r->township,
+                        $r->street_landmark,
+                        $r->time_seen?->toDateTimeString(),
+                        $r->status,
+                        $r->urgency,
+                        $r->assigned_to,
+                        $r->reporter_phone,
+                        $r->follow_up_note,
+                        $r->condition_note,
+                    ]);
+                }
+            });
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    public function bulkUpdateSpotReports(Request $request)
+    {
+        $data = $request->validate([
+            'report_ids' => ['required', 'array', 'min:1'],
+            'report_ids.*' => ['integer', 'exists:spot_reports,id'],
+            'status' => ['required', 'in:unread,checked,in_progress,resolved'],
+            'urgency' => ['nullable', 'in:low,normal,high,urgent'],
+            'assigned_to' => ['nullable', 'string', 'max:255'],
+            'follow_up_note' => ['nullable', 'string', 'max:4000'],
+        ]);
+        $updated = 0;
+        foreach (array_unique($data['report_ids']) as $id) {
+            $report = SpotReport::query()->find($id);
+            if (! $report) {
+                continue;
+            }
+            $payload = array_filter([
+                'status' => $data['status'],
+                'urgency' => $data['urgency'] ?? null,
+                'assigned_to' => array_key_exists('assigned_to', $data) ? $data['assigned_to'] : null,
+                'follow_up_note' => array_key_exists('follow_up_note', $data) ? $data['follow_up_note'] : null,
+            ], fn ($v, $k) => $k === 'status' || $v !== null, ARRAY_FILTER_USE_BOTH);
+            $payload['resolved_at'] = $data['status'] === 'resolved' ? now() : null;
+            $report->update($payload);
+            AuditLog::query()->create([
+                'actor_id' => auth()->id(),
+                'action' => 'spot_report.workflow_updated',
+                'auditable_type' => SpotReport::class,
+                'auditable_id' => $report->id,
+                'metadata' => [...$payload, 'bulk' => true],
+                'ip_address' => request()->ip(),
+            ]);
+            $updated++;
+        }
+
+        return redirect()->back()->with('success', "Bulk report update complete: {$updated} updated.");
     }
 
     public function managementIndex()
@@ -371,65 +445,11 @@ class DashboardController extends Controller
             'review_note' => ['nullable', 'string', 'max:1000', 'required_if:status,rejected'],
         ]);
 
-        $status = $data['status'];
         $reviewNote = filled($data['review_note'] ?? null) ? trim($data['review_note']) : null;
+        $result = $this->applyDonationReview($donation->id, $data['status'], $reviewNote);
 
-        $updated = DB::transaction(function () use ($donation, $status, $reviewNote): bool {
-            $lockedDonation = Donation::query()->lockForUpdate()->findOrFail($donation->id);
-
-            if ($lockedDonation->status !== 'pending') {
-                return false;
-            }
-
-            if ($status === 'approved') {
-                $pool = FundPool::query()->lockForUpdate()->findOrFail($lockedDonation->fund_pool_id);
-                $pool->increment('total_raised', $lockedDonation->amount);
-                $lockedDonation->approved_at = now();
-                $lockedDonation->certificate_code = $this->generateCertificateCode();
-            } else {
-                $lockedDonation->approved_at = null;
-                $lockedDonation->certificate_code = null;
-            }
-
-            $lockedDonation->status = $status;
-            $lockedDonation->review_note = $reviewNote;
-            $lockedDonation->reviewed_at = now();
-            $lockedDonation->save();
-
-            return true;
-        });
-
-        if (! $updated) {
+        if (! $result['updated']) {
             return redirect()->back()->withErrors(['status' => 'This donation has already been reviewed.']);
-        }
-
-        $donation->refresh();
-
-        AuditLog::query()->create([
-            'actor_id' => auth()->id(),
-            'action' => 'donation.status_updated',
-            'auditable_type' => Donation::class,
-            'auditable_id' => $donation->id,
-            'metadata' => ['status' => $status, 'review_note' => $reviewNote],
-            'ip_address' => request()->ip(),
-        ]);
-
-        if (filled($donation->donor_email)) {
-            try {
-                Notification::route('mail', $donation->donor_email)->notify(new DonationReviewedNotification(
-                    status: $donation->status,
-                    donorName: $donation->is_anonymous ? 'Anonymous donor' : ($donation->donor_name ?: 'Supporter'),
-                    amount: number_format((float) $donation->amount, 0),
-                    reviewNote: $donation->review_note,
-                    trackingUrl: route('donations.status-page').'?token='.urlencode((string) $donation->tracking_token),
-                ));
-            } catch (\Throwable $exception) {
-                Log::warning('Donation review notification dispatch failed', [
-                    'donation_id' => $donation->id,
-                    'donor_email' => $donation->donor_email,
-                    'error' => $exception->getMessage(),
-                ]);
-            }
         }
 
         return redirect()->back()->with('success', 'Donation status updated successfully.');
@@ -517,5 +537,185 @@ class DashboardController extends Controller
         } while (Donation::query()->where('certificate_code', $code)->exists());
 
         return $code;
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    protected function donationListQuery(array $filters): Builder
+    {
+        $query = Donation::query()->with('fundPool')->latest();
+        $query->when(($filters['status'] ?? null) && ($filters['status'] ?? null) !== 'all', fn ($builder) => $builder->where('status', $filters['status']));
+        $query->when(($filters['payment_method'] ?? null) && ($filters['payment_method'] ?? null) !== 'all', fn ($builder) => $builder->where('payment_method', $filters['payment_method']));
+        $query->when($filters['fund_pool_id'] ?? null, fn ($builder, $poolId) => $builder->where('fund_pool_id', $poolId));
+        $query->when($filters['date_from'] ?? null, fn ($builder, $date) => $builder->whereDate('created_at', '>=', $date));
+        $query->when($filters['date_to'] ?? null, fn ($builder, $date) => $builder->whereDate('created_at', '<=', $date));
+        $query->when($filters['amount_min'] ?? null, fn ($builder, $amount) => $builder->where('amount', '>=', $amount));
+        $query->when($filters['amount_max'] ?? null, fn ($builder, $amount) => $builder->where('amount', '<=', $amount));
+        $query->when($filters['search'] ?? null, function ($builder, $search): void {
+            $builder->where(function ($nested) use ($search): void {
+                $nested->where('donor_name', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('certificate_code', 'like', "%{$search}%")
+                    ->orWhere('tracking_token', 'like', "%{$search}%")
+                    ->orWhere('payment_method', 'like', "%{$search}%");
+            });
+        });
+
+        return $query;
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    protected function donationAuditTrail(int $limit): array
+    {
+        $logs = AuditLog::query()
+            ->with('actor:id,name')
+            ->where('auditable_type', Donation::class)
+            ->latest()
+            ->limit($limit)
+            ->get();
+
+        $ids = $logs->pluck('auditable_id')->filter()->unique()->values();
+        $donations = $ids->isEmpty()
+            ? collect()
+            : Donation::query()->with('fundPool:id,title_mm,title_en')->whereIn('id', $ids)->get()->keyBy('id');
+
+        return $logs->map(function (AuditLog $log) use ($donations): array {
+            $d = $donations->get($log->auditable_id);
+
+            return [
+                'id' => $log->id,
+                'action' => $log->action,
+                'created_at' => $log->created_at?->toIso8601String(),
+                'actor' => $log->actor ? ['id' => $log->actor->id, 'name' => $log->actor->name] : null,
+                'donation_id' => $log->auditable_id,
+                'donation' => $d ? [
+                    'donor_name' => $d->is_anonymous ? 'Anonymous donor' : ($d->donor_name ?: 'Unknown donor'),
+                    'amount' => (string) $d->amount,
+                    'status' => $d->status,
+                    'fund_pool' => $d->fundPool?->title_en ?? $d->fundPool?->title_mm ?? 'General',
+                ] : null,
+                'metadata' => $log->metadata,
+            ];
+        })->all();
+    }
+
+    /**
+     * @return array{updated: bool, notified: bool}
+     */
+    protected function applyDonationReview(int $donationId, string $status, ?string $reviewNote): array
+    {
+        $updated = DB::transaction(function () use ($donationId, $status, $reviewNote): bool {
+            $lockedDonation = Donation::query()->lockForUpdate()->findOrFail($donationId);
+
+            if ($lockedDonation->status !== 'pending') {
+                return false;
+            }
+
+            if ($status === 'approved') {
+                $pool = FundPool::query()->lockForUpdate()->findOrFail($lockedDonation->fund_pool_id);
+                $pool->increment('total_raised', $lockedDonation->amount);
+                $lockedDonation->approved_at = now();
+                $lockedDonation->certificate_code = $this->generateCertificateCode();
+            } else {
+                $lockedDonation->approved_at = null;
+                $lockedDonation->certificate_code = null;
+            }
+
+            $lockedDonation->status = $status;
+            $lockedDonation->review_note = $reviewNote;
+            $lockedDonation->reviewed_at = now();
+            $lockedDonation->save();
+
+            return true;
+        });
+
+        if (! $updated) {
+            return ['updated' => false, 'notified' => false];
+        }
+
+        $donation = Donation::query()->findOrFail($donationId);
+
+        AuditLog::query()->create([
+            'actor_id' => auth()->id(),
+            'action' => 'donation.status_updated',
+            'auditable_type' => Donation::class,
+            'auditable_id' => $donation->id,
+            'metadata' => ['status' => $status, 'review_note' => $reviewNote, 'bulk' => request()->routeIs('admin.donations.bulk-status')],
+            'ip_address' => request()->ip(),
+        ]);
+
+        $notified = false;
+        if (filled($donation->donor_email)) {
+            try {
+                Notification::route('mail', $donation->donor_email)->notify(new DonationReviewedNotification(
+                    status: $donation->status,
+                    donorName: $donation->is_anonymous ? 'Anonymous donor' : ($donation->donor_name ?: 'Supporter'),
+                    amount: number_format((float) $donation->amount, 0),
+                    reviewNote: $donation->review_note,
+                    trackingUrl: route('donations.status-page').'?token='.urlencode((string) $donation->tracking_token),
+                ));
+                $notified = true;
+            } catch (\Throwable $exception) {
+                Log::warning('Donation review notification dispatch failed', [
+                    'donation_id' => $donation->id,
+                    'donor_email' => $donation->donor_email,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        return ['updated' => true, 'notified' => $notified];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    protected function spotReportListQuery(array $filters): Builder
+    {
+        return SpotReport::query()->latest()
+            ->when($filters['township'] ?? null, fn ($builder, $township) => $builder->where('township', $township))
+            ->when(($filters['status'] ?? null) && $filters['status'] !== 'all', fn ($builder) => $builder->where('status', $filters['status']))
+            ->when(($filters['urgency'] ?? null) && $filters['urgency'] !== 'all', fn ($builder) => $builder->where('urgency', $filters['urgency']))
+            ->when($filters['assigned_to'] ?? null, fn ($builder, $assignedTo) => $builder->where('assigned_to', 'like', "%{$assignedTo}%"))
+            ->when($filters['date_from'] ?? null, fn ($builder, $date) => $builder->whereDate('created_at', '>=', $date))
+            ->when($filters['date_to'] ?? null, fn ($builder, $date) => $builder->whereDate('created_at', '<=', $date));
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    protected function spotReportAuditTrail(int $limit): array
+    {
+        $logs = AuditLog::query()
+            ->with('actor:id,name')
+            ->where('auditable_type', SpotReport::class)
+            ->latest()
+            ->limit($limit)
+            ->get();
+
+        $ids = $logs->pluck('auditable_id')->filter()->unique()->values();
+        $reports = $ids->isEmpty() ? collect() : SpotReport::query()->whereIn('id', $ids)->get()->keyBy('id');
+
+        return $logs->map(function (AuditLog $log) use ($reports): array {
+            $r = $reports->get($log->auditable_id);
+
+            return [
+                'id' => $log->id,
+                'action' => $log->action,
+                'created_at' => $log->created_at?->toIso8601String(),
+                'actor' => $log->actor ? ['id' => $log->actor->id, 'name' => $log->actor->name] : null,
+                'report_id' => $log->auditable_id,
+                'report' => $r ? [
+                    'reference_code' => $r->reference_code,
+                    'township' => $r->township,
+                    'status' => $r->status,
+                    'urgency' => $r->urgency,
+                ] : null,
+                'metadata' => $log->metadata,
+            ];
+        })->all();
     }
 }

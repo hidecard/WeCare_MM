@@ -60,5 +60,8 @@
     </head>
     <body class="font-sans antialiased">
         @inertia
+        @if(config('services.analytics.script_url'))
+            <script defer data-domain="{{ config('services.analytics.domain') }}" src="{{ config('services.analytics.script_url') }}"@if(config('services.analytics.api')) data-api="{{ config('services.analytics.api') }}"@endif></script>
+        @endif
     </body>
 </html>

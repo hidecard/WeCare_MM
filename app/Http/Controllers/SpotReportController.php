@@ -46,9 +46,13 @@ class SpotReportController extends Controller
             ->with('spot_report_reference', $spotReport->reference_code);
     }
 
-    public function downloadPhoto(SpotReport $spotReport): StreamedResponse
+    public function downloadPhoto(\Illuminate\Http\Request $request, SpotReport $spotReport): StreamedResponse
     {
         abort_unless($spotReport->photo_path && Storage::disk('local')->exists($spotReport->photo_path), 404);
+
+        if ($request->boolean('inline')) {
+            return Storage::disk('local')->response($spotReport->photo_path);
+        }
 
         return Storage::disk('local')->download($spotReport->photo_path);
     }

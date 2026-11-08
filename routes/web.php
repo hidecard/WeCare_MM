@@ -11,6 +11,15 @@ use App\Http\Controllers\VolunteerController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+Route::get('/sitemap.xml', function () {
+    $urls = array_map(fn (string $name) => route($name), [
+        'home', 'about', 'donate', 'impact', 'outreach', 'community', 'privacy-policy', 'terms', 'data-handling',
+    ]);
+    $items = implode('', array_map(fn (string $url) => "<url><loc>{$url}</loc><changefreq>weekly</changefreq></url>", $urls));
+
+    return response('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'.$items.'</urlset>', 200, ['Content-Type' => 'application/xml']);
+})->name('sitemap');
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/donate', [HomeController::class, 'donate'])->name('donate');
@@ -44,9 +53,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/volunteers', [DashboardController::class, 'volunteersIndex'])->name('admin.volunteers.index');
     Route::get('/admin/donations', [DashboardController::class, 'donationsIndex'])->name('admin.donations.index');
     Route::get('/admin/donations/list', [DashboardController::class, 'donationListIndex'])->name('admin.donations.list');
+    Route::get('/admin/donations/export', [DashboardController::class, 'exportDonations'])->name('admin.donations.export');
+    Route::post('/admin/donations/bulk-status', [DashboardController::class, 'bulkUpdateDonations'])->name('admin.donations.bulk-status');
     Route::get('/admin/donations/{donation}/slip', [DashboardController::class, 'downloadDonationSlip'])->name('admin.donations.slip');
     Route::get('/admin/trips', [DashboardController::class, 'tripsIndex'])->name('admin.trips.index');
     Route::get('/admin/reports', [DashboardController::class, 'spotReportsIndex'])->name('admin.reports.index');
+    Route::get('/admin/reports/export', [DashboardController::class, 'exportSpotReports'])->name('admin.reports.export');
+    Route::post('/admin/reports/bulk-status', [DashboardController::class, 'bulkUpdateSpotReports'])->name('admin.reports.bulk-status');
     Route::patch('/admin/reports/{spotReport}', [DashboardController::class, 'updateSpotReport'])->name('admin.reports.update');
     Route::get('/admin/reports/{spotReport}/photo', [SpotReportController::class, 'downloadPhoto'])->name('admin.reports.photo');
     Route::get('/admin/payment-methods', [PaymentMethodController::class, 'index'])->name('admin.payment-methods.index');
