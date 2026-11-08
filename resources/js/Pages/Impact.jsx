@@ -11,7 +11,7 @@ const categoryLabels = {
     en: { food: 'Food', medicine: 'Medicine', transport: 'Transport', supplies: 'Supplies', shelter: 'Shelter', other: 'Other' },
 };
 
-export default function Impact({ impact = {}, financialSummary = {}, recentTrips = [], monthlySummary = [], expenseBreakdown = [] }) {
+export default function Impact({ impact = {}, financialSummary = {}, recentTrips = [], monthlySummary = [], expenseBreakdown = [], dataFreshness = null }) {
     const [lang, setLang] = useLanguage();
     const copy = (myanmar, english) => (lang === 'my' ? myanmar : english);
 
@@ -48,6 +48,7 @@ export default function Impact({ impact = {}, financialSummary = {}, recentTrips
         src: String(photo).startsWith('http') ? photo : `/storage/${photo}`,
         township: trip.township,
     }))).slice(0, 3);
+    const freshnessLabel = dataFreshness ? new Intl.DateTimeFormat(lang === 'my' ? 'my-MM' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(dataFreshness)) : starting;
 
     const outreachStats = [
         { label: copy('အသက်ကြီးသူများ', 'Elderly helped'), value: impact.total_elderly_helped ?? 0, icon: Users },
@@ -130,7 +131,7 @@ export default function Impact({ impact = {}, financialSummary = {}, recentTrips
                     </div>
 
                     <section className="mt-8 rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-100">
-                        <h2 className="text-2xl font-black text-slate-900">{copy('ကုန်ကျစရိတ် ခွဲခြမ်း', 'Where the money went')}</h2>
+                        <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-2xl font-black text-slate-900">{copy('ကုန်ကျစရိတ် ခွဲခြမ်း', 'Where the money went')}</h2><p className="mt-2 text-sm text-slate-600">{copy('အတည်ပြုပြီးသော အလှူနှင့် active ကုန်ကျစရိတ်မှတ်တမ်းများကိုသာ ထည့်သွင်းထားပါသည်။', 'Only approved donations and active expense records are included.')}</p></div><Link href={route('impact.monthly')} className="inline-flex rounded-full bg-[#065F46] px-4 py-2 text-sm font-bold text-white">{copy('လစဉ်အစီရင်ခံစာ', 'Monthly report')}</Link></div>
                         {expenseBreakdown.length === 0 ? (
                             <p className="mt-4 text-base text-slate-600">{starting}</p>
                         ) : (
@@ -155,6 +156,8 @@ export default function Impact({ impact = {}, financialSummary = {}, recentTrips
                             </ul>
                         )}
                     </section>
+
+                    <p className="mt-5 text-center text-sm text-slate-500">{copy('နောက်ဆုံးမှတ်တမ်းပြင်ဆင်ချိန်', 'Last recorded update')}: {freshnessLabel}</p>
 
                     <section className="mt-10 rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-100">
                         <h2 className="text-2xl font-black text-slate-900">{copy('လစဉ် အကျဉ်းချုပ်', 'Monthly summary')}</h2>

@@ -45,6 +45,7 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
     const [copiedTracking, setCopiedTracking] = useState(false);
     const [slipPreview, setSlipPreview] = useState('');
     const [slipError, setSlipError] = useState('');
+    const [slipProcessing, setSlipProcessing] = useState(false);
     const [step, setStep] = useState(1);
 
     useEffect(() => {
@@ -122,7 +123,7 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
         }
     };
 
-    const handleSlipChange = (event) => {
+    const handleSlipChange = async (event) => {
         const file = event.target.files?.[0];
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
         if (file && (!allowedTypes.includes(file.type) || file.size > 4 * 1024 * 1024)) {
@@ -132,9 +133,36 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
             setSlipError(lang === 'my' ? 'JPG, PNG, WEBP (4 MB အထိ) သာ တင်နိုင်ပါသည်။' : 'Please upload a JPG, PNG, or WEBP image under 4 MB.');
             return;
         }
-        donationForm.setData('slip_image', file || null);
-        setSlipPreview(file ? URL.createObjectURL(file) : '');
+        if (!file) {
+            donationForm.setData('slip_image', null);
+            setSlipPreview('');
+            setSlipError('');
+            return;
+        }
+        setSlipProcessing(true);
+        let uploadFile = file;
+        if (file.size > 1.5 * 1024 * 1024) {
+            try {
+                const sourceUrl = URL.createObjectURL(file);
+                const image = new Image();
+                image.src = sourceUrl;
+                await new Promise((resolve, reject) => { image.onload = resolve; image.onerror = reject; });
+                const scale = Math.min(1, 1800 / Math.max(image.naturalWidth, image.naturalHeight));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+                canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+                canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height);
+                const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.82));
+                URL.revokeObjectURL(sourceUrl);
+                if (blob && blob.size < file.size) uploadFile = new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.jpg`, { type: 'image/jpeg' });
+            } catch {
+                // Keep the original file when a browser cannot compress it.
+            }
+        }
+        donationForm.setData('slip_image', uploadFile);
+        setSlipPreview(URL.createObjectURL(uploadFile));
         setSlipError('');
+        setSlipProcessing(false);
     };
 
     const paymentsOpen = Object.keys(paymentDetails).length > 0;
@@ -291,6 +319,7 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                                 onSlipChange={handleSlipChange}
                                 slipPreview={slipPreview}
                                 slipError={slipError}
+                                slipProcessing={slipProcessing}
                                 review={{ pool: poolName, amount: currency.format(amountNum), payment: selectedPayment }}
                                 onEditPool={() => setStep(1)}
                                 onEditAmount={() => setStep(2)}

@@ -48,9 +48,34 @@
             @endif
         @endif
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <style>
+            #app:empty::before {
+                content: 'WeCare Myanmar · ဝီကဲယား မြန်မာ';
+                display: grid;
+                min-height: 100vh;
+                place-items: center;
+                padding: 2rem;
+                color: #065f46;
+                background: #f8fafc;
+                font: 600 1rem/1.8 system-ui, sans-serif;
+                text-align: center;
+            }
+            #app:empty::after {
+                content: '';
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                width: 1.5rem;
+                height: 1.5rem;
+                margin: -0.75rem;
+                border: 3px solid #d1fae5;
+                border-top-color: #f59e0b;
+                border-radius: 9999px;
+                animation: wecare-spin 0.8s linear infinite;
+            }
+            @keyframes wecare-spin { to { transform: rotate(360deg); } }
+            @media (prefers-reduced-motion: reduce) { #app:empty::after { animation: none; } }
+        </style>
 
         <!-- Scripts -->
         @routes

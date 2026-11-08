@@ -8,7 +8,7 @@ import { formatDisplayDate } from '../lib/formatDisplayDate';
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
 const numberFormat = new Intl.NumberFormat('en-MM');
 
-export default function Home({ impact = {}, recentTrips = [], financialSummary = {} }) {
+export default function Home({ impact = {}, recentTrips = [], financialSummary = {}, dataFreshness = null }) {
     const [lang, setLang] = useLanguage();
     const [selectedTrip, setSelectedTrip] = useState(null);
     const copy = (myanmar, english) => (lang === 'my' ? myanmar : english);
@@ -21,6 +21,7 @@ export default function Home({ impact = {}, recentTrips = [], financialSummary =
         ? starting
         : currency.format(Number(financialSummary.current_balance) || 0);
     const balanceGap = currency.format(Math.abs(received - spent));
+    const freshnessLabel = dataFreshness ? new Intl.DateTimeFormat(lang === 'my' ? 'my-MM' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(dataFreshness)) : starting;
     const balanceSentence = received === 0 && spent === 0
         ? ''
         : spent > received
@@ -104,6 +105,7 @@ export default function Home({ impact = {}, recentTrips = [], financialSummary =
                                 <div className="rounded-2xl bg-amber-50 p-4"><p className="text-base text-amber-800">{copy('ကုန်ကျစရိတ်', 'Expenses')}</p><p className="mt-1 text-2xl font-black">{showMoney(financialSummary.total_spent)}</p></div>
                                 <div className="rounded-2xl bg-slate-50 p-4"><p className="text-base text-slate-700">{copy('လက်ကျန်', 'Balance')}</p><p className="mt-1 text-2xl font-black">{showBalance}</p>{balanceSentence && <p className="mt-2 text-base leading-relaxed text-slate-700">{balanceSentence}</p>}</div>
                             </div>
+                            <p className="mt-4 text-xs text-slate-500">{copy('နောက်ဆုံးမှတ်တမ်းပြင်ဆင်ချိန်', 'Last recorded update')}: {freshnessLabel}</p>
                             <Link href={route('impact')} className="mt-5 inline-flex text-base font-semibold text-emerald-700">{copy('အသေးစိတ်ကြည့်ရန်', 'See the impact page')} <BadgeCheck className="ml-2 h-4 w-4" /></Link>
                         </div>
                     </section>

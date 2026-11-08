@@ -42,12 +42,49 @@ class HomeController extends Controller
             'recentTrips' => $data['recentTrips'],
             'monthlySummary' => $data['monthlySummary'],
             'expenseBreakdown' => $this->expenseBreakdown(),
+            'dataFreshness' => $data['dataFreshness'],
         ]);
     }
 
     public function about()
     {
         return Inertia::render('About');
+    }
+
+    public function monthlyReport(Request $request)
+    {
+        $month = $request->validate(['month' => ['nullable', 'date_format:Y-m']])['month'] ?? now()->format('Y-m');
+        $start = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+        $end = $start->copy()->endOfMonth();
+        $donations = Donation::query()->where('status', 'approved')->whereBetween('approved_at', [$start, $end])->get(['amount']);
+        $expenses = Expense::query()->active()->where(function ($query) use ($start, $end): void {
+            $query->whereBetween('period_start', [$start->toDateString(), $end->toDateString()])
+                ->orWhere(function ($nested) use ($start, $end): void {
+                    $nested->whereNull('period_start')->whereBetween('created_at', [$start, $end]);
+                });
+        })->get(['category', 'amount']);
+        $trips = OutreachTrip::query()->whereBetween('trip_date', [$start->toDateString(), $end->toDateString()])->get(['elderly_helped_count', 'meals_distributed', 'medical_aid_count', 'township']);
+        $resolvedReports = SpotReport::query()->where('status', 'resolved')->whereBetween('resolved_at', [$start, $end])->count();
+
+        return Inertia::render('MonthlyImpact', [
+            'report' => [
+                'month' => $month,
+                'label' => $start->format('F Y'),
+                'approved_amount' => (float) $donations->sum('amount'),
+                'approved_count' => $donations->count(),
+                'expense_amount' => (float) $expenses->sum('amount'),
+                'expense_breakdown' => $expenses->groupBy('category')->map(fn ($rows, $category): array => ['category' => $category, 'amount' => (float) $rows->sum('amount')])->values()->all(),
+                'trip_count' => $trips->count(),
+                'elderly_helped' => (int) $trips->sum('elderly_helped_count'),
+                'meals_distributed' => (int) $trips->sum('meals_distributed'),
+                'medical_aid' => (int) $trips->sum('medical_aid_count'),
+                'townships_reached' => $trips->pluck('township')->filter()->unique()->values()->all(),
+                'resolved_reports' => $resolvedReports,
+                'last_updated_at' => $this->dataFreshness(),
+            ],
+            'availableMonths' => collect(range(11, 0))->map(fn (int $offset): string => now()->startOfMonth()->subMonths($offset)->format('Y-m'))->all(),
+        ]);
+    }
     }
 
     public function outreach(Request $request)
@@ -158,7 +195,20 @@ class HomeController extends Controller
             'recentTrips' => $recentTrips,
             'financialSummary' => $financialSummary,
             'monthlySummary' => $this->monthlySummary(),
+            'dataFreshness' => $this->dataFreshness(),
         ];
+    }
+
+    protected function dataFreshness(): ?string
+    {
+        $latest = collect([
+            Donation::query()->where('status', 'approved')->max('updated_at'),
+            Expense::query()->active()->max('updated_at'),
+            OutreachTrip::query()->max('updated_at'),
+            SpotReport::query()->where('status', 'resolved')->max('updated_at'),
+        ])->filter()->max();
+
+        return $latest ? Carbon::parse($latest)->toIso8601String() : null;
     }
 
     /**

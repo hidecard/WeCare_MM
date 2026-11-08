@@ -79,6 +79,9 @@
 - [x] Add the 1200×630 Burmese/English WeCare Myanmar social preview artwork in PNG/SVG formats.
 - [x] Run the frontend production build and `git diff --check` after the latest UI/SEO changes.
 - [x] Run `npm audit --omit=dev`; no production dependency vulnerabilities were reported.
+- [x] Pull the latest remote privacy/about/data-handling/care-detail features and preserve them while resolving the HomeController merge.
+- [x] Add an initial loading skeleton so the app does not show a blank screen while the Inertia bundle loads.
+- [x] Add QR lightbox viewing, payment-slip client-side compression, and an upload optimization state to the donation flow.
 
 ## Next roadmap — donor trust, admin operations, and growth
 
@@ -108,20 +111,20 @@ These are the next tasks requested after the Admin search/filter milestone. Keep
 
 ### 3. Public trust and transparency
 
-- [ ] Add a “last updated” timestamp to public financial and impact summaries.
-- [ ] Show approved donations, active expenses, current balance, people helped, meals, medical aid, and townships reached with clear labels.
-- [ ] Add a public expense-category breakdown with a short methodology note.
+- [x] Add a “last updated” timestamp to public financial and impact summaries.
+- [x] Show approved donations, active expenses, current balance, people helped, meals, medical aid, and townships reached with clear labels.
+- [x] Add a public expense-category breakdown with a short methodology note.
 - [ ] Add a public explanation of manual payment review and donation approval timing.
 - [ ] Add a payment/account FAQ, including what to do after sending money to the wrong account.
 - [ ] Review outreach photo consent, beneficiary privacy, and EXIF/location metadata before publishing real images.
 
 ### 4. Monthly impact reports
 
-- [ ] Add a public monthly impact report page using approved donation, expense, trip, and resolved-report data.
-- [ ] Add month selection with server-side query handling and shareable URLs.
-- [ ] Add downloadable PDF/monthly summary output.
+- [x] Add a public monthly impact report page using approved donation, expense, trip, and resolved-report data.
+- [x] Add month selection with server-side query handling and shareable URLs.
+- [x] Add browser print/save-PDF support for the monthly summary output.
 - [ ] Add a shareable 1200×630 impact image for each published month.
-- [ ] Add report data freshness and source notes so donors understand what is included.
+- [x] Add report data freshness and source notes so donors understand what is included.
 
 ### 5. Notifications and communication
 

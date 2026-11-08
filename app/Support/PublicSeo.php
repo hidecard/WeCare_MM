@@ -18,6 +18,7 @@ class PublicSeo
             'about' => self::page('about', 'about', true),
             'donate' => self::page('donate', 'donate', true),
             'impact' => self::page('impact', 'impact', true),
+            'impact.monthly' => self::page('monthlyImpact', 'impact.monthly', true),
             'outreach' => self::page('outreach', 'outreach', true),
             'community' => self::page('community', 'community', true),
             'privacy-policy' => self::page('privacyPolicy', 'privacy-policy', true),
@@ -136,6 +137,13 @@ class PublicSeo
                 'description' => [
                     'my' => 'အတည်ပြုပြီး အလှူ၊ ကုန်ကျစရိတ်၊ လက်ကျန်နှင့် ကွင်းဆင်းခရီးများကို မှတ်တမ်းအစစ်ကနေ ကြည့်ပါ။',
                     'en' => 'See approved donations, recorded expenses, the balance, and outreach trips from real records.',
+                ],
+            ],
+            'monthlyImpact' => [
+                'title' => ['my' => 'လစဉ် အကျိုးသက်ရောက်မှုအစီရင်ခံစာ', 'en' => 'Monthly impact report'],
+                'description' => [
+                    'my' => 'အတည်ပြုပြီးသော အလှူ၊ ကုန်ကျစရိတ်၊ ကွင်းဆင်းခရီးနှင့် ကူညီခဲ့သူများကို လစဉ်အလိုက် ပွင့်လင်းစွာ ကြည့်ရှုပါ။',
+                    'en' => 'Review approved donations, expenses, outreach trips, and people helped for each month.',
                 ],
             ],
             'outreach' => [

@@ -1,4 +1,5 @@
 import { Check, Copy, CreditCard } from 'lucide-react';
+import { useState } from 'react';
 import { myanmarMobileError } from '../lib/myanmarMobile';
 
 export default function DonationFlowSteps({
@@ -14,10 +15,12 @@ export default function DonationFlowSteps({
     onSlipChange,
     slipPreview = '',
     slipError = '',
+    slipProcessing = false,
     review = null,
     onEditPool,
     onEditAmount,
 }) {
+    const [showQr, setShowQr] = useState(false);
     const copy = (myanmar, english) => (lang === 'my' ? myanmar : english);
     const phoneError = myanmarMobileError(donationForm.data.phone, lang) || donationForm.errors.phone || '';
 
@@ -51,7 +54,7 @@ export default function DonationFlowSteps({
                             <p role="alert" className="mt-2 text-base font-semibold text-red-700">{copy('နံပါတ်စစ်ပါ။ ဒီအကောင့်နံပါတ်က မပြည့်သေးပါ။', 'Check this number. It looks incomplete.')}</p>
                         )}
                         {paymentDetails[selectedPayment]?.qr_url && (
-                            <img src={paymentDetails[selectedPayment].qr_url} alt={`${selectedPayment} QR`} className="mx-auto mt-4 h-56 w-56 rounded-2xl bg-white object-contain p-3 ring-1 ring-slate-200" />
+                            <button type="button" onClick={() => setShowQr(true)} className="mx-auto mt-4 block rounded-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300" aria-label={copy('QR ကုဒ်ကို အကြီးချဲ့ကြည့်ရန်', 'Enlarge payment QR code')}><img src={paymentDetails[selectedPayment].qr_url} alt={`${selectedPayment} QR`} className="h-56 w-56 rounded-2xl bg-white object-contain p-3 ring-1 ring-slate-200" /></button>
                         )}
                         <button type="button" disabled={String(paymentDetails[selectedPayment]?.phone || '').replace(/\D/g, '').length < 9} onClick={() => onCopyPaymentNumber(selectedPayment)} className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#F59E0B] px-4 py-3 text-base font-bold text-[#065F46] transition hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-200 disabled:cursor-not-allowed disabled:opacity-50">
                             {copiedPayment ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -65,6 +68,14 @@ export default function DonationFlowSteps({
                                     <li>{copy('မှတ်ချက်/reference ထည့်ရန် မလိုအပ်ပါ (အဖွဲ့မှ တောင်းဆိုထားခြင်း မရှိလျှင်)။', 'A transfer note/reference is not required unless the team asks for it.')}</li>
                                     <li>{copy('မှားယွင်းသော အကောင့်သို့ လွှဲမိခြင်း ရှောင်ရန် အကောင့်နံပါတ်ကို ပြန်စစ်ပါ။', 'Double-check the account number before sending.')}</li>
                                 </ul>
+                            </div>
+                        )}
+                        {showQr && paymentDetails[selectedPayment]?.qr_url && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-5" role="dialog" aria-modal="true" aria-label={copy('ငွေပေးချေမှု QR ကုဒ်', 'Payment QR code')} onClick={() => setShowQr(false)}>
+                                <div className="relative rounded-3xl bg-white p-4 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+                                    <img src={paymentDetails[selectedPayment].qr_url} alt={`${selectedPayment} enlarged QR`} className="max-h-[75vh] max-w-[85vw] rounded-2xl object-contain" />
+                                    <button type="button" onClick={() => setShowQr(false)} className="mt-3 w-full rounded-full bg-[#065F46] px-4 py-3 text-sm font-bold text-white">{copy('ပိတ်ရန်', 'Close')}</button>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -119,7 +130,8 @@ export default function DonationFlowSteps({
                 </div>
             )}
             <label className="flex items-start gap-3 rounded-2xl border border-white/15 bg-white/5 p-4 text-base text-emerald-50"><input type="checkbox" checked={Boolean(donationForm.data.information_confirmed)} onChange={(event) => donationForm.setData('information_confirmed', event.target.checked)} className="mt-1 h-4 w-4 rounded border-white/20 accent-amber-400" />{copy('လှူဒါန်းငွေပမာဏ၊ ငွေလွှဲနည်းလမ်းနှင့် ကိုယ်ရေးအချက်အလက်များ မှန်ကန်ကြောင်း အတည်ပြုပါသည်။', 'I confirm that the donation amount, payment method, and donor information are correct.')}</label>
-            <button type="submit" className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#F59E0B] px-4 py-3.5 text-base font-bold text-[#065F46] shadow-sm transition hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40 disabled:cursor-not-allowed disabled:opacity-60" disabled={donationForm.processing || !!slipError || !!phoneError || paymentMethods.length === 0 || !donationForm.data.slip_image || !donationForm.data.information_confirmed}>
+            {slipProcessing && <p role="status" className="rounded-xl bg-emerald-100 p-3 text-sm font-semibold text-emerald-900">{copy('ပြေစာပုံကို အရွယ်အစားလျှော့နေသည်...', 'Optimizing the payment slip...')}</p>}
+            <button type="submit" className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#F59E0B] px-4 py-3.5 text-base font-bold text-[#065F46] shadow-sm transition hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40 disabled:cursor-not-allowed disabled:opacity-60" disabled={slipProcessing || donationForm.processing || !!slipError || !!phoneError || paymentMethods.length === 0 || !donationForm.data.slip_image || !donationForm.data.information_confirmed}>
                 {donationForm.processing && <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#065F46]/30 border-t-[#065F46]" aria-hidden="true" />}
                 {donationForm.processing ? copy('တင်သွင်းနေသည်…', 'Submitting…') : copy('လှူဒါန်းမှု အတည်ပြုမည်', 'Confirm donation')}
             </button>
