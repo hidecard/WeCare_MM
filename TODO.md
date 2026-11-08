@@ -153,7 +153,7 @@ These are the next tasks requested after the Admin search/filter milestone. Keep
 
 ### 8. Release verification
 
-- [ ] Confirm GitHub Actions CI passes PHP 8.4 setup, migrations, seed, Pest tests, and Vite build.
+- [x] Confirm GitHub Actions CI passes PHP 8.4 setup, migrations, seed, Pest tests, and Vite build (run 42430604563, commit 55605f9).
 - [ ] Take a production database backup before every destructive/schema-changing migration.
 - [ ] Run a full donor smoke test from public donation to admin review, status lookup, notification, and certificate download.
 - [ ] Run social preview checks for Home, Donate, Impact, Outreach, and Community links.
