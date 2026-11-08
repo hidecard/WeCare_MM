@@ -145,11 +145,11 @@ These are the next tasks requested after the Admin search/filter milestone. Keep
 
 ### 7. Help center and support
 
-- [ ] Add a public Help/FAQ page with donation, payment slip, tracking, certificate, report, and volunteer questions.
-- [ ] Add verified support phone, email, Telegram, and Facebook contact links.
-- [ ] Add support hours and expected response time.
-- [ ] Add a “payment issue” and “wrong transfer” contact action.
-- [ ] Add bilingual FAQ content and accessible accordion behavior.
+- [x] Add a public Help/FAQ page with donation, payment slip, tracking, certificate, report, and volunteer questions.
+- [ ] Configure and verify the real support phone, email, Telegram, and Facebook URLs in production environment variables; the UI now renders only configured contacts.
+- [x] Add configurable support hours and expected response time.
+- [x] Add “payment issue” and “wrong transfer” email actions when a verified support email is configured.
+- [x] Add bilingual FAQ content and accessible native-details accordion behavior.
 
 ### 8. Release verification
 

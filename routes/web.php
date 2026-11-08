@@ -13,7 +13,7 @@ use Inertia\Inertia;
 
 Route::get('/sitemap.xml', function () {
     $urls = array_map(fn (string $name) => route($name), [
-        'home', 'about', 'donate', 'impact', 'impact.monthly', 'outreach', 'community', 'privacy-policy', 'terms', 'data-handling',
+        'home', 'about', 'donate', 'impact', 'impact.monthly', 'outreach', 'community', 'help', 'privacy-policy', 'terms', 'data-handling',
     ]);
     $items = implode('', array_map(fn (string $url) => "<url><loc>{$url}</loc><changefreq>weekly</changefreq></url>", $urls));
 
@@ -27,6 +27,7 @@ Route::get('/impact', [HomeController::class, 'impact'])->name('impact');
 Route::get('/impact/monthly', [HomeController::class, 'monthlyReport'])->name('impact.monthly');
 Route::get('/outreach', [HomeController::class, 'outreach'])->name('outreach');
 Route::get('/community', [HomeController::class, 'community'])->name('community');
+Route::get('/help', [HomeController::class, 'help'])->name('help');
 Route::get('/privacy-policy', [HomeController::class, 'privacyPolicy'])->name('privacy-policy');
 Route::get('/terms', [HomeController::class, 'terms'])->name('terms');
 Route::get('/data-handling', [HomeController::class, 'dataHandling'])->name('data-handling');

@@ -115,6 +115,11 @@ class HomeController extends Controller
         return Inertia::render('Community');
     }
 
+    public function help()
+    {
+        return Inertia::render('HelpCenter');
+    }
+
     public function privacyPolicy()
     {
         return Inertia::render('PrivacyPolicy');

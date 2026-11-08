@@ -41,4 +41,13 @@ return [
         'api' => env('ANALYTICS_API'),
     ],
 
+    'support' => [
+        'phone' => env('WECARE_SUPPORT_PHONE'),
+        'email' => env('WECARE_SUPPORT_EMAIL'),
+        'telegram_url' => env('WECARE_SUPPORT_TELEGRAM_URL'),
+        'facebook_url' => env('WECARE_SUPPORT_FACEBOOK_URL'),
+        'hours' => env('WECARE_SUPPORT_HOURS', 'နေ့စဉ် 9:00 AM – 6:00 PM Myanmar Time'),
+        'response_time' => env('WECARE_SUPPORT_RESPONSE_TIME', '၁ ရက်အတွင်း / within 1 day'),
+    ],
+
 ];

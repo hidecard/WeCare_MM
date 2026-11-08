@@ -21,6 +21,7 @@ class PublicSeo
             'impact.monthly' => self::page('monthlyImpact', 'impact.monthly', true),
             'outreach' => self::page('outreach', 'outreach', true),
             'community' => self::page('community', 'community', true),
+            'help' => self::page('help', 'help', true),
             'privacy-policy' => self::page('privacyPolicy', 'privacy-policy', true),
             'terms' => self::page('terms', 'terms', true),
             'data-handling' => self::page('dataHandling', 'data-handling', true),
@@ -158,6 +159,13 @@ class PublicSeo
                 'description' => [
                     'my' => 'အကူအညီလိုသူတွေ့ရင် မြို့နယ်၊ နေရာနှင့် ဖုန်းနံပါတ်ပို့ပါ။ စေတနာ့ဝန်ထမ်းအဖြစ်လည်း ပါဝင်နိုင်သည်။',
                     'en' => 'Report someone who needs help with a township, place, and phone number, or join as a volunteer.',
+                ],
+            ],
+            'help' => [
+                'title' => ['my' => 'အကူအညီနှင့် ဆက်သွယ်ရန်', 'en' => 'Help & support'],
+                'description' => [
+                    'my' => 'လှူဒါန်းခြင်း၊ ငွေလွှဲပြေစာ၊ ခြေရာခံခြင်း၊ သတင်းပေးခြင်းနှင့် စေတနာ့ဝန်ထမ်းကိစ္စများအတွက် မေးလေ့ရှိသောမေးခွန်းများနှင့် ဆက်သွယ်ရန်လမ်းကြောင်းများ။',
+                    'en' => 'Answers and support contacts for donations, payment slips, tracking, reports, and volunteering.',
                 ],
             ],
             'donationStatus' => [

@@ -58,6 +58,7 @@ class HandleInertiaRequests extends Middleware
                 'unread_reports' => SpotReport::query()->where('status', 'unread')->count(),
             ] : null,
             'seo' => fn (): ?array => PublicSeo::forRequest($request),
+            'support' => config('services.support'),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'donation_receipt' => fn () => $request->session()->get('donation_receipt'),

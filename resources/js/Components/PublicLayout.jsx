@@ -12,6 +12,7 @@ const navByLang = {
         { key: 'impact', label: 'သက်ရောက်မှု', href: route('impact') },
         { key: 'outreach', label: 'လမ်းဘေးကူညီရေး', href: route('outreach') },
         { key: 'community', label: 'အသိုက်အဝန်း', href: route('community') },
+        { key: 'help', label: 'အကူအညီ', href: route('help') },
         { key: 'status', label: 'ခြေရာခံ', href: route('donations.status-page') },
     ],
     en: [
@@ -21,6 +22,7 @@ const navByLang = {
         { key: 'impact', label: 'Impact', href: route('impact') },
         { key: 'outreach', label: 'Outreach', href: route('outreach') },
         { key: 'community', label: 'Community', href: route('community') },
+        { key: 'help', label: 'Help', href: route('help') },
         { key: 'status', label: 'Track gift', href: route('donations.status-page') },
     ],
 };
@@ -28,7 +30,7 @@ const navByLang = {
 export default function PublicLayout({ children, active = 'home', lang = 'my', setLang }) {
     const [mobileOpen, setMobileOpen] = useState(false);
     const navItems = navByLang[lang] ?? navByLang.my;
-    const { seo } = usePage().props;
+    const { seo, support = {} } = usePage().props;
 
     return (
         <div lang={lang === 'my' ? 'my' : 'en'} className="min-h-screen bg-[#FFFBEB] text-slate-800">
@@ -150,15 +152,21 @@ export default function PublicLayout({ children, active = 'home', lang = 'my', s
                             <Link href={route('spot-reports.status-page')} className="block rounded hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
                                 {lang === 'my' ? 'သတင်းပေးမှု အခြေအနေ' : 'Report status'}
                             </Link>
+                            <Link href={route('help')} className="block rounded font-semibold text-amber-200 hover:text-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+                                {lang === 'my' ? 'အကူအညီနှင့် ဆက်သွယ်ရန်' : 'Help & support'}
+                            </Link>
                         </div>
                     </div>
 
                     <div>
                         <p className="text-sm font-bold uppercase tracking-[0.2em] text-emerald-100/90">{lang === 'my' ? 'ဆက်သွယ်ရန်' : 'Contact'}</p>
                         <div className="mt-4 space-y-2 text-sm text-emerald-50/85">
-                            <p>+95 9 123 456 789</p>
-                            <p>care@wecaremyanmar.org</p>
-                            <p>Yangon, Myanmar</p>
+                            {support.phone && <a href={`tel:${support.phone.replace(/[^+\d]/g, '')}`} className="block hover:text-white">{support.phone}</a>}
+                            {support.email && <a href={`mailto:${support.email}`} className="block break-words hover:text-white">{support.email}</a>}
+                            {support.telegram_url && <a href={support.telegram_url} target="_blank" rel="noreferrer" className="block hover:text-white">Telegram</a>}
+                            {support.facebook_url && <a href={support.facebook_url} target="_blank" rel="noreferrer" className="block hover:text-white">Facebook</a>}
+                            {!support.phone && !support.email && !support.telegram_url && !support.facebook_url && <Link href={route('help')} className="block text-amber-200 hover:text-amber-100">{lang === 'my' ? 'Support အချက်အလက်များကို ကြည့်ရန်' : 'View support options'}</Link>}
+                            <p className="text-xs text-emerald-100/70">{support.hours || (lang === 'my' ? 'Support အချိန် သတ်မှတ်နေဆဲ' : 'Support hours being configured')}</p>
                         </div>
                         <p className="mt-5 text-sm font-bold uppercase tracking-[0.2em] text-emerald-100/90">{lang === 'my' ? 'မူဝါဒများ' : 'Policies'}</p>
                         <div className="mt-3 space-y-2 text-sm text-emerald-50/85">
