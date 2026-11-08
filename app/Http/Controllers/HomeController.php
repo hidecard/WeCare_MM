@@ -85,7 +85,6 @@ class HomeController extends Controller
             'availableMonths' => collect(range(11, 0))->map(fn (int $offset): string => now()->startOfMonth()->subMonths($offset)->format('Y-m'))->all(),
         ]);
     }
-    }
 
     public function outreach(Request $request)
     {
