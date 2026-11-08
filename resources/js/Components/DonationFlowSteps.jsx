@@ -57,7 +57,16 @@ export default function DonationFlowSteps({
                             {copiedPayment ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                             {copiedPayment ? copy('ကူးပြီးပါပြီ', 'Copied') : copy('အကောင့်နံပါတ် ကူးရန်', 'Copy account number')}
                         </button>
-                        {copiedPayment && <p role="status" className="mt-2 text-base font-semibold text-emerald-700">{copy('နံပါတ်ကို ကူးပြီးပါပြီ။ ငွေလွှဲအက်ပ်ထဲမှာ ပွားထည့်ပါ။', 'The number is copied. Paste it in your payment app.')}</p>}
+                        {copiedPayment && (
+                            <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4" role="status">
+                                <p className="text-base font-semibold text-emerald-800">{copy('နံပါတ်ကို ကူးပြီးပါပြီ။ ငွေလွှဲပြီးနောက် ငွေလွှဲပြေစာ (slip) ကို အဆင့် ၃ တွင် တင်ပါ။', 'Number copied. After transferring, upload your payment slip in step 3.')}</p>
+                                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-emerald-900">
+                                    <li>{copy('ရွေးထားသော လှူဒါန်းငွေပမာဏအတိုင်း တိတိကျကျ လွှဲပါ။', 'Transfer the exact donation amount you selected.')}</li>
+                                    <li>{copy('မှတ်ချက်/reference ထည့်ရန် မလိုအပ်ပါ (အဖွဲ့မှ တောင်းဆိုထားခြင်း မရှိလျှင်)။', 'A transfer note/reference is not required unless the team asks for it.')}</li>
+                                    <li>{copy('မှားယွင်းသော အကောင့်သို့ လွှဲမိခြင်း ရှောင်ရန် အကောင့်နံပါတ်ကို ပြန်စစ်ပါ။', 'Double-check the account number before sending.')}</li>
+                                </ul>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -88,6 +97,15 @@ export default function DonationFlowSteps({
             <label htmlFor="shared-slip-image" className="block text-base font-semibold text-emerald-50">{copy('ငွေလွှဲပြေစာပုံ', 'Payment slip')}<input id="shared-slip-image" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" required onChange={onSlipChange} className="mt-1 block w-full rounded-xl border border-dashed border-white/15 bg-white/5 px-3 py-3 text-sm font-normal text-emerald-50/70 file:mr-3 file:rounded-full file:border-0 file:bg-[#F59E0B] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#065F46]" /></label>
             {slipPreview && <img src={slipPreview} alt={copy('ငွေလွှဲပြေစာ ကြိုတင်ကြည့်ရှုမှု', 'Payment slip preview')} className="h-40 w-full rounded-xl bg-white object-contain p-2" />}
             <p className="text-base text-emerald-50/80">{copy('JPG, PNG, WEBP (4 MB အထိ) တင်ပါ။', 'Upload JPG, PNG, or WEBP (up to 4 MB).')}</p>
+            <div className="rounded-2xl border border-amber-200/40 bg-amber-300/10 p-4 text-sm text-emerald-50">
+                <p className="font-semibold text-amber-100">{copy('မတင်မီ သတိပြုရန်', 'Before you submit')}</p>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-emerald-50/90">
+                    <li>{copy('ငွေလွှဲပမာဏသည် အောက်ပါ ရွေးချယ်ထားသော ပမာဏနှင့် ကိုက်ညီရပါမည်။', 'The transferred amount must match the selected amount below.')}</li>
+                    <li>{copy('ပြေစာပုံတွင် ပမာဏ/ရက်စွဲ/အကောင့်အချက်အလက် မြင်ရရှင်းလင်းပါစေ။', 'Make sure the slip clearly shows the amount, date, and account details.')}</li>
+                    <li>{copy('မှတ်ချက်/reference မှားရေးခြင်းဖြင့် စစ်ဆေးမှုနှောင့်နှေးနိုင်သော်လည်း အဓိကမှာ ပြေစာနှင့် ပမာဏ မှန်ကန်ခြင်း ဖြစ်ပါသည်။', 'A wrong note/reference can slow review, but the slip and amount are most important.')}</li>
+                    <li>{copy('အီးမေးလ် မထည့်ထားပါက တင်သွင်းပြီးနောက် ရရှိမည့် ခြေရာခံအမှတ် (tracking ID) ကို ကူးယူ/သိမ်းဆည်းထားပါ။', 'If you do not provide an email, save the tracking ID shown after submission.')}</li>
+                </ul>
+            </div>
             {review && (
                 <div className="rounded-2xl bg-white p-4 text-slate-900">
                     <p className="text-base font-semibold text-emerald-800">{copy('မပို့မီ စစ်ပါ', 'Check before you send')}</p>

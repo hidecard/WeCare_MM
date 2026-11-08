@@ -343,7 +343,8 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
                                         <button type="button" onClick={saveTrackingCard} className="rounded-full bg-[#065F46] px-4 py-2.5 text-base font-bold text-white">{lang === 'my' ? 'ပုံအဖြစ် သိမ်းရန်' : 'Save as image'}</button>
                                         <button type="button" onClick={shareTrackingCard} className="rounded-full bg-[#F59E0B] px-4 py-2.5 text-base font-bold text-[#065F46]">{lang === 'my' ? 'Viber / Facebook မှာ ဝေမျှရန်' : 'Share on Viber or Facebook'}</button>
                                     </div>
-                                    <p className="mt-3 text-base text-slate-700">{submittedReceipt.donor_email ? (lang === 'my' ? 'အတည်ပြုချက်ကို ဒီအီးမေးလ်ဆီ ပို့ပါမယ်။' : 'The review result will be emailed to you.') : (lang === 'my' ? 'အီးမေးလ်မထည့်ရင် ဒီအမှတ်နဲ့ပဲ အခြေအနေပြန်ကြည့်နိုင်ပါတယ်။' : 'Without an email, this ID is the only way to check the status.')}</p>
+                                    <p className="mt-3 text-base text-slate-700">{submittedReceipt.donor_email ? (lang === 'my' ? 'အတည်ပြုချက်ကို ဒီအီးမေးလ်ဆီ ပို့ပါမယ်။' : 'The review result will be emailed to you.') : (lang === 'my' ? 'အီးမေးလ်မထည့်ထားပါက ဒီအမှတ်ကသာ အခြေအနေစစ်ဆေးရာ လမ်းကြောင်းဖြစ်သည် — ကူးယူ/ပုံသိမ်း/ဝေမျှ ထားပါ။' : 'Without an email, this ID is the only way to check status — copy, save, or share it now.')}</p>
+                                    <Link href={`${route('donations.status-page')}?token=${encodeURIComponent(submittedReceipt.tracking_token)}`} className="mt-3 inline-flex text-sm font-semibold text-emerald-800 underline underline-offset-2">{lang === 'my' ? 'ဒီအမှတ်နဲ့ အခြေအနေစစ်ရန် ဖွင့်မည်' : 'Open status page with this ID'}</Link>
                                 </div>
                             )}
                             <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">

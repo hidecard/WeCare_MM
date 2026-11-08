@@ -1,8 +1,9 @@
 import { Link } from '@inertiajs/react';
-import { ArrowLeft, CheckCircle2, Clock3, Search, XCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock3, Copy, Search, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import PublicLayout from '../Components/PublicLayout';
 import useLanguage from '../hooks/useLanguage';
+import { DONATION_RECEIPT_EVENT, readDonationReceipts } from '../lib/donationReceipts';
 
 const currency = new Intl.NumberFormat('en-MM', { style: 'currency', currency: 'MMK', maximumFractionDigits: 0 });
 const formatDateTime = (value, lang) => {
@@ -19,6 +20,8 @@ export default function DonationStatus() {
     const [error, setError] = useState('');
     const [processing, setProcessing] = useState(false);
     const [lastLookup, setLastLookup] = useState('');
+    const [savedReceipts, setSavedReceipts] = useState(() => readDonationReceipts());
+    const [copiedId, setCopiedId] = useState('');
     const copy = (myanmar, english) => (lang === 'my' ? myanmar : english);
 
     const lookup = async (token) => {
@@ -53,6 +56,17 @@ export default function DonationStatus() {
             setProcessing(false);
         }
     };
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return undefined;
+        const sync = () => setSavedReceipts(readDonationReceipts());
+        window.addEventListener(DONATION_RECEIPT_EVENT, sync);
+        window.addEventListener('storage', sync);
+        return () => {
+            window.removeEventListener(DONATION_RECEIPT_EVENT, sync);
+            window.removeEventListener('storage', sync);
+        };
+    }, []);
 
     useEffect(() => {
         const token = new URLSearchParams(window.location.search).get('token')?.trim();
@@ -92,6 +106,69 @@ export default function DonationStatus() {
         await lookup(trackingToken.trim());
     };
 
+    const copyTrackingId = async (token) => {
+        if (!token) return;
+        try {
+            await navigator.clipboard.writeText(token);
+            setCopiedId(token);
+            window.setTimeout(() => setCopiedId(''), 1800);
+        } catch {
+            setCopiedId('');
+        }
+    };
+
+    const drawTrackingCard = (token) => {
+        if (!token) return null;
+        const canvas = document.createElement('canvas');
+        canvas.width = 900;
+        canvas.height = 520;
+        const context = canvas.getContext('2d');
+        if (!context) return null;
+        context.fillStyle = '#065F46';
+        context.fillRect(0, 0, 900, 520);
+        context.fillStyle = '#F59E0B';
+        context.fillRect(0, 0, 900, 14);
+        context.fillStyle = '#ffffff';
+        context.font = 'bold 40px sans-serif';
+        context.fillText('WeCare Myanmar', 48, 92);
+        context.fillStyle = '#D1FAE5';
+        context.font = '24px sans-serif';
+        context.fillText(copy('လှူဒါန်းမှု ခြေရာခံအမှတ်', 'Donation tracking ID'), 48, 160);
+        context.fillStyle = '#ffffff';
+        context.font = 'bold 22px monospace';
+        const lines = token.match(/.{1,36}/g) || [token];
+        lines.forEach((line, index) => context.fillText(line, 48, 220 + index * 36));
+        context.fillStyle = '#FCD34D';
+        context.font = '20px sans-serif';
+        context.fillText(copy('ဤအမှတ်ဖြင့် အခြေအနေ စစ်ဆေးနိုင်ပါသည်', 'Use this ID to check your donation status'), 48, 470);
+        return canvas;
+    };
+
+    const saveTrackingCard = (token) => {
+        const canvas = drawTrackingCard(token);
+        if (!canvas) return;
+        const link = document.createElement('a');
+        link.download = 'wecare-tracking-id.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    };
+
+    const shareTrackingCard = async (token) => {
+        const canvas = drawTrackingCard(token);
+        if (!canvas) return;
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+        const file = blob ? new File([blob], 'wecare-tracking-id.png', { type: 'image/png' }) : null;
+        if (file && navigator.canShare?.({ files: [file] })) {
+            try {
+                await navigator.share({ files: [file], title: 'WeCare Myanmar', text: copy('လှူဒါန်းမှု ခြေရာခံအမှတ်', 'Donation tracking ID') });
+                return;
+            } catch {
+                return;
+            }
+        }
+        saveTrackingCard(token);
+    };
+
     const statusCopy = {
         pending: copy('စစ်ဆေးနေဆဲ', 'Under review'),
         approved: copy('အတည်ပြုပြီး', 'Approved'),
@@ -127,18 +204,55 @@ export default function DonationStatus() {
                                     type="text"
                                     value={trackingToken}
                                     onChange={(event) => setTrackingToken(event.target.value)}
-                                    placeholder="WC-..."
+                                    placeholder={copy('တင်သွင်းပြီးနောက် ရရှိသော အမှတ် (ဥပမာ အက္ခရာ/ဂဏန်း ရှည်လျားသော code)', 'The ID you received after submitting (long code)')}
                                     autoComplete="off"
+                                    spellCheck={false}
                                     className="min-w-0 flex-1 rounded-full border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-emerald-100/60 outline-none focus:border-[#F59E0B]"
                                 />
                                 <button type="submit" disabled={processing} className="inline-flex items-center justify-center gap-2 rounded-full bg-[#F59E0B] px-5 py-3 text-sm font-bold text-[#065F46] disabled:cursor-not-allowed disabled:opacity-60">
                                     <Search className="h-4 w-4" /> {processing ? copy('စစ်ဆေးနေသည်...', 'Checking...') : copy('စစ်ဆေးရန်', 'Check status')}
                                 </button>
                             </div>
+                            <p className="text-xs leading-relaxed text-emerald-50/80">{copy('အီးမေးလ် မထည့်ထားသူများအတွက် ဤခြေရာခံအမှတ်သည် အခြေအနေစစ်ဆေးရာ တစ်ခုတည်းသော လမ်းကြောင်းဖြစ်နိုင်ပါသည်။ တင်သွင်းပြီးချိန်တွင် ကူးယူ/ပုံသိမ်း/ဝေမျှ ထားပါ။', 'If you did not provide an email, this tracking ID may be the only way to check your status. Copy, save, or share it after submitting.')}</p>
                         </form>
+
+                        {savedReceipts.length > 0 && (
+                            <div className="mt-5 rounded-2xl bg-white/10 p-4 ring-1 ring-white/15">
+                                <p className="text-sm font-semibold text-white">{copy('ဤစက်ထဲ သိမ်းထားသော လှူဒါန်းမှုအမှတ်များ', 'Tracking IDs saved on this device')}</p>
+                                <div className="mt-3 space-y-2">
+                                    {savedReceipts.slice(0, 5).map((receipt) => (
+                                        <div key={receipt.tracking_token} className="flex flex-col gap-2 rounded-xl bg-white/5 p-3 sm:flex-row sm:items-center sm:justify-between">
+                                            <div className="min-w-0">
+                                                <p className="truncate font-mono text-xs text-emerald-50/90">{receipt.tracking_token}</p>
+                                                <p className="mt-0.5 text-xs text-emerald-50/70">{receipt.donor_name || copy('အမည်မဖော်ပြ', 'Anonymous')} · MMK {Number(receipt.amount || 0).toLocaleString('en-US')}</p>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                <button type="button" onClick={() => { setTrackingToken(receipt.tracking_token); lookup(receipt.tracking_token); }} className="rounded-full bg-[#F59E0B] px-3 py-1.5 text-xs font-bold text-[#065F46]">{copy('စစ်ရန်', 'Check')}</button>
+                                                <button type="button" onClick={() => copyTrackingId(receipt.tracking_token)} className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white">{copiedId === receipt.tracking_token ? copy('ကူးပြီး', 'Copied') : copy('ကူးရန်', 'Copy')}</button>
+                                                <button type="button" onClick={() => saveTrackingCard(receipt.tracking_token)} className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white">{copy('ပုံသိမ်း', 'Save')}</button>
+                                                <button type="button" onClick={() => shareTrackingCard(receipt.tracking_token)} className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white">{copy('ဝေမျှ', 'Share')}</button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </section>
 
-                    {error && <div role="alert" className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800"><p>{error}</p>{lastLookup && <button type="button" onClick={handleSubmit} className="mt-3 rounded-full bg-white px-3 py-2 text-xs font-bold text-red-800 ring-1 ring-red-200">{copy('ပြန်ကြိုးစားရန်', 'Try again')}</button>}</div>}
+                    {error && (
+                        <div role="alert" className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                            <p className="font-semibold">{error}</p>
+                            <ul className="mt-2 list-disc space-y-1 pl-5 text-red-800/90">
+                                <li>{copy('အမှတ်ကို ကူးယူထည့်စဉ် ရှေ့/နောက် space မပါအောင် စစ်ပါ။', 'Remove extra spaces before/after the ID.')}</li>
+                                <li>{copy('အက္ခရာ/ဂဏန်း အပြည့်အစုံ ပါဝင်မှု ရှိမရှိ ပြန်စစ်ပါ။', 'Make sure the full code is included.')}</li>
+                                <li>{copy('အီးမေးလ် မထည့်ခဲ့လျှင် တင်သွင်းပြီးချိန်တွင် ပြသခဲ့သော အမှတ်ကို အသုံးပြုရပါမည်။', 'If you did not provide an email, use the ID shown right after submission.')}</li>
+                            </ul>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                {lastLookup && <button type="button" onClick={handleSubmit} className="rounded-full bg-white px-3 py-2 text-xs font-bold text-red-800 ring-1 ring-red-200">{copy('ပြန်ကြိုးစားရန်', 'Try again')}</button>}
+                                <Link href={route('donate')} className="rounded-full bg-red-800 px-3 py-2 text-xs font-bold text-white">{copy('လှူဒါန်းမှု ပြန်တင်ရန်', 'Submit a donation')}</Link>
+                            </div>
+                        </div>
+                    )}
 
                     {result && (
                         <section className="mt-5 rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-100 sm:p-8" aria-live="polite">
@@ -153,7 +267,15 @@ export default function DonationStatus() {
                             </div>
                             <div className="mt-6 grid gap-3 sm:grid-cols-2">
                                 <div className="rounded-2xl bg-emerald-50 p-4"><p className="text-xs text-emerald-700">{copy('လှူဒါန်းပမာဏ', 'Amount')}</p><p className="mt-1 text-xl font-black text-slate-900">{currency.format(Number(result.amount) || 0)}</p></div>
-                                <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs text-slate-600">{copy('လှူဒါန်းမှုအမှတ်', 'Tracking ID')}</p><p className="mt-1 break-all font-mono text-sm font-bold text-slate-900">{trackingToken.trim()}</p></div>
+                                <div className="rounded-2xl bg-slate-50 p-4">
+                                    <p className="text-xs text-slate-600">{copy('လှူဒါန်းမှုအမှတ်', 'Tracking ID')}</p>
+                                    <p className="mt-1 break-all font-mono text-sm font-bold text-slate-900">{trackingToken.trim()}</p>
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        <button type="button" onClick={() => copyTrackingId(trackingToken.trim())} className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 ring-1 ring-slate-200"><Copy className="h-3.5 w-3.5" />{copiedId === trackingToken.trim() ? copy('ကူးပြီး', 'Copied') : copy('ကူးရန်', 'Copy')}</button>
+                                        <button type="button" onClick={() => saveTrackingCard(trackingToken.trim())} className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 ring-1 ring-slate-200">{copy('ပုံသိမ်း', 'Save image')}</button>
+                                        <button type="button" onClick={() => shareTrackingCard(trackingToken.trim())} className="rounded-full bg-[#065F46] px-3 py-1.5 text-xs font-semibold text-white">{copy('ဝေမျှ', 'Share')}</button>
+                                    </div>
+                                </div>
                             </div>
                             <ol className="mt-6 grid gap-3 sm:grid-cols-3" aria-label={copy('လှူဒါန်းမှု အခြေအနေမှတ်တမ်း', 'Donation status timeline')}>
                                 {timeline.map((item, index) => (

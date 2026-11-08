@@ -12,12 +12,15 @@ use App\Models\SpotReport;
 use App\Models\Volunteer;
 use App\Notifications\DonationReviewedNotification;
 use App\Services\TripExpenseSync;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DashboardController extends Controller
 {
@@ -42,12 +45,12 @@ class DashboardController extends Controller
     {
         return Inertia::render('Admin/Donations', [
             'pendingDonations' => $this->pendingDonations()->paginate(10),
+            'auditTrail' => $this->donationAuditTrail(12),
         ]);
     }
 
     public function donationListIndex(Request $request)
     {
-        $query = Donation::query()->with('fundPool')->latest();
         $filters = $request->validate([
             'status' => ['nullable', 'in:all,pending,approved,rejected'],
             'payment_method' => ['nullable', 'string', 'max:255'],
@@ -58,22 +61,7 @@ class DashboardController extends Controller
             'amount_min' => ['nullable', 'numeric', 'min:0'],
             'amount_max' => ['nullable', 'numeric', 'gte:amount_min'],
         ]);
-        $query->when(($filters['status'] ?? null) && ($filters['status'] ?? null) !== 'all', fn ($builder) => $builder->where('status', $filters['status']));
-        $query->when(($filters['payment_method'] ?? null) && ($filters['payment_method'] ?? null) !== 'all', fn ($builder) => $builder->where('payment_method', $filters['payment_method']));
-        $query->when($filters['fund_pool_id'] ?? null, fn ($builder, $poolId) => $builder->where('fund_pool_id', $poolId));
-        $query->when($filters['date_from'] ?? null, fn ($builder, $date) => $builder->whereDate('created_at', '>=', $date));
-        $query->when($filters['date_to'] ?? null, fn ($builder, $date) => $builder->whereDate('created_at', '<=', $date));
-        $query->when($filters['amount_min'] ?? null, fn ($builder, $amount) => $builder->where('amount', '>=', $amount));
-        $query->when($filters['amount_max'] ?? null, fn ($builder, $amount) => $builder->where('amount', '<=', $amount));
-        $query->when($filters['search'] ?? null, function ($builder, $search): void {
-            $builder->where(function ($nested) use ($search): void {
-                $nested->where('donor_name', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('certificate_code', 'like', "%{$search}%")
-                    ->orWhere('tracking_token', 'like', "%{$search}%")
-                    ->orWhere('payment_method', 'like', "%{$search}%");
-            });
-        });
+        $query = $this->donationListQuery($filters);
 
         return Inertia::render('Admin/DonationList', [
             'donations' => $query->paginate(15)->withQueryString(),
@@ -87,6 +75,7 @@ class DashboardController extends Controller
                 'rejected' => Donation::query()->where('status', 'rejected')->count(),
                 'approved_amount' => (float) Donation::query()->where('status', 'approved')->sum('amount'),
             ],
+            'auditTrail' => $this->donationAuditTrail(15),
         ]);
     }
 
@@ -95,6 +84,46 @@ class DashboardController extends Controller
         abort_unless($donation->slip_image_path && Storage::disk('local')->exists($donation->slip_image_path), 404);
 
         return Storage::disk('local')->download($donation->slip_image_path);
+    }
+
+    public function exportDonations(Request $request): StreamedResponse
+    {
+        $filters = $request->validate([
+            'status' => ['nullable', 'in:all,pending,approved,rejected'],
+            'payment_method' => ['nullable', 'string', 'max:255'],
+            'fund_pool_id' => ['nullable', 'integer', 'exists:fund_pools,id'],
+            'search' => ['nullable', 'string', 'max:255'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+            'amount_min' => ['nullable', 'numeric', 'min:0'],
+            'amount_max' => ['nullable', 'numeric', 'gte:amount_min'],
+        ]);
+        $query = $this->donationListQuery($filters);
+        $filename = 'donations-'.now()->format('Ymd-His').'.csv';
+
+        return response()->streamDownload(function () use ($query): void {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Date', 'Donor', 'Email', 'Phone', 'Fund pool', 'Amount (MMK)', 'Payment method', 'Status', 'Review note', 'Reviewed at', 'Tracking token', 'Certificate code']);
+            $query->chunkById(200, function ($donations) use ($out): void {
+                foreach ($donations as $d) {
+                    fputcsv($out, [
+                        $d->created_at?->toDateTimeString(),
+                        $d->is_anonymous ? 'Anonymous donor' : ($d->donor_name ?: 'Unknown donor'),
+                        $d->donor_email,
+                        $d->phone,
+                        $d->fundPool?->title_en ?? $d->fundPool?->title_mm ?? 'General',
+                        (string) $d->amount,
+                        $d->payment_method,
+                        $d->status,
+                        $d->review_note,
+                        $d->reviewed_at?->toDateTimeString() ?? $d->approved_at?->toDateTimeString(),
+                        $d->tracking_token,
+                        $d->certificate_code,
+                    ]);
+                }
+            });
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     public function tripsIndex()
@@ -106,6 +135,34 @@ class DashboardController extends Controller
                 ->latest('trip_date')
                 ->paginate(10),
         ]);
+    }
+
+    public function bulkUpdateDonations(Request $request)
+    {
+        $data = $request->validate([
+            'donation_ids' => ['required', 'array', 'min:1'],
+            'donation_ids.*' => ['integer', 'exists:donations,id'],
+            'status' => ['required', 'in:approved,rejected'],
+            'review_note' => ['nullable', 'string', 'max:1000', 'required_if:status,rejected'],
+        ]);
+        $reviewNote = filled($data['review_note'] ?? null) ? trim($data['review_note']) : null;
+        $updated = 0;
+        $skipped = 0;
+        $notified = 0;
+
+        foreach (array_unique($data['donation_ids']) as $id) {
+            $result = $this->applyDonationReview((int) $id, $data['status'], $reviewNote);
+            if ($result['updated']) {
+                $updated++;
+                if ($result['notified']) {
+                    $notified++;
+                }
+            } else {
+                $skipped++;
+            }
+        }
+
+        return redirect()->back()->with('success', "Bulk review complete: {$updated} updated, {$skipped} skipped. {$notified} email notification(s) queued.");
     }
 
     public function spotReportsIndex(Request $request)
@@ -358,13 +415,21 @@ class DashboardController extends Controller
         ]);
 
         if (filled($donation->donor_email)) {
-            Notification::route('mail', $donation->donor_email)->notify(new DonationReviewedNotification(
-                status: $donation->status,
-                donorName: $donation->is_anonymous ? 'Anonymous donor' : ($donation->donor_name ?: 'Supporter'),
-                amount: number_format((float) $donation->amount, 0),
-                reviewNote: $donation->review_note,
-                trackingUrl: route('donations.status-page').'?token='.urlencode((string) $donation->tracking_token),
-            ));
+            try {
+                Notification::route('mail', $donation->donor_email)->notify(new DonationReviewedNotification(
+                    status: $donation->status,
+                    donorName: $donation->is_anonymous ? 'Anonymous donor' : ($donation->donor_name ?: 'Supporter'),
+                    amount: number_format((float) $donation->amount, 0),
+                    reviewNote: $donation->review_note,
+                    trackingUrl: route('donations.status-page').'?token='.urlencode((string) $donation->tracking_token),
+                ));
+            } catch (\Throwable $exception) {
+                Log::warning('Donation review notification dispatch failed', [
+                    'donation_id' => $donation->id,
+                    'donor_email' => $donation->donor_email,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
         }
 
         return redirect()->back()->with('success', 'Donation status updated successfully.');
