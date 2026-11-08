@@ -49,6 +49,7 @@ it('completes payment method CRUD and allows donors to submit with a custom meth
         'phone' => '09912340000',
         'is_anonymous' => false,
         'slip_image' => UploadedFile::fake()->image('slip.jpg'),
+        'information_confirmed' => true,
     ])->assertRedirect()->assertSessionHas('donation_receipt');
 
     expect(Donation::query()->where('payment_method', 'MABPay')->exists())->toBeTrue();

@@ -163,7 +163,7 @@ it('shows a myanmar fund description and every outreach photo', function () {
 
     $this->get(route('outreach'))
         ->assertOk()
-        ->assertInertia(fn ($page) => $page->where('recentTrips.0.photos_json', [
+        ->assertInertia(fn ($page) => $page->where('recentTrips.data.0.photos_json', [
             'trip-photos/one.jpg',
             'trip-photos/two.jpg',
         ]));

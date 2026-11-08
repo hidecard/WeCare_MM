@@ -18,7 +18,7 @@ it('omits trip photos that are not stored on the public disk', function () {
     $this->get(route('outreach'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('recentTrips.0.photos_json', ['trip-photos/real.jpg']));
+            ->where('recentTrips.data.0.photos_json', ['trip-photos/real.jpg']));
 });
 
 it('renders the management page when lists are paginated', function () {
