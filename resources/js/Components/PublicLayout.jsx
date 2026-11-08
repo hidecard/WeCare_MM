@@ -160,6 +160,12 @@ export default function PublicLayout({ children, active = 'home', lang = 'my', s
                             <p>care@wecaremyanmar.org</p>
                             <p>Yangon, Myanmar</p>
                         </div>
+                        <p className="mt-5 text-sm font-bold uppercase tracking-[0.2em] text-emerald-100/90">{lang === 'my' ? 'မူဝါဒများ' : 'Policies'}</p>
+                        <div className="mt-3 space-y-2 text-sm text-emerald-50/85">
+                            <Link href={route('privacy-policy')} className="block rounded hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">{lang === 'my' ? 'ကိုယ်ရေးအချက်အလက် မူဝါဒ' : 'Privacy Policy'}</Link>
+                            <Link href={route('terms')} className="block rounded hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">{lang === 'my' ? 'အသုံးပြုမှု/လှူဒါန်းမှု မူဝါဒ' : 'Terms & Donation Policy'}</Link>
+                            <Link href={route('data-handling')} className="block rounded hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">{lang === 'my' ? 'အချက်အလက် ကိုင်တွယ်မှု' : 'Data Handling'}</Link>
+                        </div>
                     </div>
                 </div>
 

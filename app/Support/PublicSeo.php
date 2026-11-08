@@ -20,6 +20,9 @@ class PublicSeo
             'impact' => self::page('impact', 'impact', true),
             'outreach' => self::page('outreach', 'outreach', true),
             'community' => self::page('community', 'community', true),
+            'privacy-policy' => self::page('privacyPolicy', 'privacy-policy', true),
+            'terms' => self::page('terms', 'terms', true),
+            'data-handling' => self::page('dataHandling', 'data-handling', true),
             'donations.status-page' => self::page('donationStatus', 'donations.status-page', false),
             'spot-reports.status-page' => self::page('spotReportStatus', 'spot-reports.status-page', false),
             'donations.certificate' => self::page('certificate', null, false),
@@ -105,6 +108,27 @@ class PublicSeo
                 'description' => [
                     'my' => 'WeCare Myanmar ၏ ရည်မှန်းချက်၊ မျှော်မှန်းချက်၊ တန်ဖိုးထားမှုများနှင့် တည်ထောင်ရသည့် အကြောင်းရင်းကို လေ့လာပါ။',
                     'en' => 'Learn about WeCare Myanmar’s goal, mission, vision, values, and why it was founded.',
+                ],
+            ],
+            'privacyPolicy' => [
+                'title' => ['my' => 'ကိုယ်ရေးအချက်အလက် မူဝါဒ', 'en' => 'Privacy Policy'],
+                'description' => [
+                    'my' => 'WeCare Myanmar သည် လှူဒါန်းမှု၊ သတင်းပေးမှုနှင့် ဆက်သွယ်ရာတွင် စုဆောင်းသော ကိုယ်ရေးအချက်အလက်များကို မည်သို့ အသုံးပြု၊ ကာကွယ်၊ သိမ်းဆည်းသည်ကို ဖော်ပြပါသည်။',
+                    'en' => 'How WeCare Myanmar collects, uses, protects, and retains personal information for donations, reports, and contact.',
+                ],
+            ],
+            'terms' => [
+                'title' => ['my' => 'အသုံးပြုမှုနှင့် လှူဒါန်းမှု မူဝါဒ', 'en' => 'Terms & Donation Policy'],
+                'description' => [
+                    'my' => 'WeCare Myanmar ဝဘ်ဆိုက် အသုံးပြုမှု၊ လှူဒါန်းမှု တင်သွင်းခြင်း၊ အတည်ပြုခြင်းနှင့် တာဝန်ကန့်သတ်ချက်များဆိုင်ရာ မူဝါဒများ။',
+                    'en' => 'Terms for using WeCare Myanmar and policies for submitting, reviewing, and processing donations.',
+                ],
+            ],
+            'dataHandling' => [
+                'title' => ['my' => 'အချက်အလက် ကိုင်တွယ်မှု', 'en' => 'Data Handling'],
+                'description' => [
+                    'my' => 'ငွေလွှဲပြေစာ၊ ဖုန်းနံပါတ်၊ အီးမေးလ်နှင့် ဓာတ်ပုံများကို မည်သူမြင်နိုင်သည်၊ မည်မျှကြာ သိမ်းဆည်းသည်၊ မည်သို့ ကာကွယ်သည်ကို ရှင်းလင်းဖော်ပြပါသည်။',
+                    'en' => 'How WeCare Myanmar handles payment slips, phone numbers, email addresses, and photos, including access, retention, and protection.',
                 ],
             ],
             'impact' => [

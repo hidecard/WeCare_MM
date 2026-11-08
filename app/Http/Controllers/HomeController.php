@@ -78,6 +78,21 @@ class HomeController extends Controller
         return Inertia::render('Community');
     }
 
+    public function privacyPolicy()
+    {
+        return Inertia::render('PrivacyPolicy');
+    }
+
+    public function terms()
+    {
+        return Inertia::render('Terms');
+    }
+
+    public function dataHandling()
+    {
+        return Inertia::render('DataHandling');
+    }
+
     protected function baseData(): array
     {
         $impact = OutreachTrip::query()
