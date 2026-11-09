@@ -46,9 +46,26 @@ class HomeController extends Controller
         ]);
     }
 
-    public function about()
+    public function leaderboard(Request $request)
     {
-        return Inertia::render('About');
+        $search = trim((string) $request->input('search', ''));
+
+        $query = Donation::query()
+            ->where('status', 'approved')
+            ->selectRaw("COALESCE(NULLIF(donor_name, ''), 'Anonymous donor') as name, SUM(amount) as total, COUNT(*) as gifts")
+            ->groupBy('name')
+            ->orderByDesc('total');
+
+        if ($search !== '') {
+            $query->having('name', 'like', '%'.$search.'%');
+        }
+
+        $donors = $query->paginate(20)->withQueryString();
+
+        return Inertia::render('Leaderboard', [
+            'donors' => $donors,
+            'search' => $search,
+        ]);
     }
 
     public function monthlyReport(Request $request)
@@ -112,6 +129,11 @@ class HomeController extends Controller
     public function community()
     {
         return Inertia::render('Community');
+    }
+
+    public function about()
+    {
+        return Inertia::render('About');
     }
 
     public function help()

@@ -32,7 +32,7 @@ const pagination = (page, onPage) => (page?.links?.length ? (
     </div>
 ) : null);
 
-export default function Expenses({ expenses = {}, fundPools = [], reviewers = [], categories = [], filters = {}, comparison = {} }) {
+export default function Expenses({ expenses = {}, fundPools = [], reviewers = [], categories = [], trips = [], filters = {}, comparison = {}, resultCount }) {
     const rows = expenses.data ?? [];
     const [open, setOpen] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -174,7 +174,8 @@ export default function Expenses({ expenses = {}, fundPools = [], reviewers = []
                                 <button type="button" onClick={reset} className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700">Cancel</button>
                                 <button type="submit" disabled={form.processing} className="rounded-full bg-[#F59E0B] px-4 py-2 text-xs font-bold text-[#065F46] disabled:opacity-60">{editingId ? 'Save changes' : 'Record expense'}</button>
                             </div>
-                        </form>
+                </form>
+                {resultCount !== undefined && <p className="mb-3 text-xs font-semibold text-slate-500">{resultCount} result{resultCount === 1 ? '' : 's'}</p>}
                     </div>
                 </div>
             )}
@@ -199,6 +200,9 @@ export default function Expenses({ expenses = {}, fundPools = [], reviewers = []
                     </label>
                     <label className="block text-xs font-semibold text-slate-600">Reviewer
                         <select name="reviewer_id" defaultValue={filters.reviewer_id ?? ''} className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"><option value="">All reviewers</option>{reviewers.map((reviewer) => <option key={reviewer.id} value={reviewer.id}>{reviewer.name}</option>)}</select>
+                    </label>
+                    <label className="block text-xs font-semibold text-slate-600">Linked trip
+                        <select name="outreach_trip_id" defaultValue={filters.outreach_trip_id ?? ''} className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"><option value="">All trips</option>{trips.map((trip) => <option key={trip.id} value={trip.id}>{trip.trip_date} — {trip.township}</option>)}</select>
                     </label>
                     <label className="block text-xs font-semibold text-slate-600">Date from<input name="date_from" type="date" defaultValue={filters.date_from ?? ''} className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" /></label>
                     <label className="block text-xs font-semibold text-slate-600">Date to<input name="date_to" type="date" defaultValue={filters.date_to ?? ''} className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" /></label>
@@ -234,18 +238,20 @@ export default function Expenses({ expenses = {}, fundPools = [], reviewers = []
                                 <th className="px-3 py-2.5">Pool</th>
                                 <th className="px-3 py-2.5">Amount</th>
                                 <th className="px-3 py-2.5">Period</th>
+                                <th className="px-3 py-2.5">Trip</th>
                                 <th className="px-3 py-2.5">Reviewer</th>
                                 <th className="px-3 py-2.5">Receipt</th>
                                 <th className="px-3 py-2.5">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200">
-                            {rows.length === 0 ? <tr><td colSpan="7" className="px-5 py-8 text-center text-slate-500">No expenses recorded.</td></tr> : rows.map((expense) => (
+                            {rows.length === 0 ? <tr><td colSpan="8" className="px-5 py-8 text-center text-slate-500">No expenses recorded.</td></tr> : rows.map((expense) => (
                                 <tr key={expense.id} className="align-top hover:bg-slate-50">
                                     <td className="px-3 py-2.5 font-semibold text-slate-900">{categoryLabels[expense.category] || expense.category}{expense.archived_at ? <span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-[10px] uppercase text-slate-600">Archived</span> : null}</td>
                                     <td className="px-3 py-2.5">{expense.fund_pool?.title_mm || expense.fund_pool?.title_en || '—'}</td>
                                     <td className="px-3 py-2.5 font-bold text-amber-700">{currency.format(Number(expense.amount) || 0)}</td>
                                     <td className="px-3 py-2.5 text-xs text-slate-600">{dateValue(expense.period_start) || '—'} – {dateValue(expense.period_end) || '—'}</td>
+                                    <td className="px-3 py-2.5">{expense.outreach_trip ? `${expense.outreach_trip.trip_date} ${expense.outreach_trip.township}` : '—'}</td>
                                     <td className="px-3 py-2.5">{expense.reviewer?.name || '—'}</td>
                                     <td className="px-3 py-2.5">{expense.receipt_path ? <a href={route('admin.expenses.receipt', expense.id)} className="font-semibold text-emerald-700">View</a> : '—'}</td>
                                     <td className="px-3 py-2.5"><ExpenseActions expense={expense} onEdit={edit} /></td>

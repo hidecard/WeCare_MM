@@ -25,6 +25,7 @@ class ExpenseController extends Controller
         $filters = $request->validate([
             'fund_pool_id' => ['nullable', 'integer', 'exists:fund_pools,id'],
             'category' => ['nullable', 'string', 'max:50'],
+            'outreach_trip_id' => ['nullable', 'integer', 'exists:outreach_trips,id'],
             'reviewer_id' => ['nullable', 'integer', 'exists:users,id'],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
@@ -33,10 +34,11 @@ class ExpenseController extends Controller
         ]);
 
         $expenses = Expense::query()
-            ->with(['fundPool:id,title_mm,title_en', 'reviewer:id,name'])
+            ->with(['fundPool:id,title_mm,title_en', 'reviewer:id,name', 'outreachTrip:id,trip_date,township'])
             ->when(! $showArchived, fn ($query) => $query->active())
             ->when($filters['fund_pool_id'] ?? null, fn ($query, $poolId) => $query->where('fund_pool_id', $poolId))
             ->when($filters['category'] ?? null, fn ($query, $category) => $query->where('category', $category))
+            ->when($filters['outreach_trip_id'] ?? null, fn ($query, $tripId) => $query->where('outreach_trip_id', $tripId))
             ->when($filters['reviewer_id'] ?? null, fn ($query, $reviewerId) => $query->where('reviewer_id', $reviewerId))
             ->when($filters['date_from'] ?? null, fn ($query, $date) => $query->whereDate('period_start', '>=', $date))
             ->when($filters['date_to'] ?? null, fn ($query, $date) => $query->whereDate('period_end', '<=', $date))
@@ -50,10 +52,13 @@ class ExpenseController extends Controller
             'expenses' => $expenses,
             'fundPools' => FundPool::query()->orderBy('title_en')->get(['id', 'title_mm', 'title_en']),
             'reviewers' => User::query()->where('role', 'admin')->orderBy('name')->get(['id', 'name']),
+            'trips' => OutreachTrip::query()->latest('trip_date')->get(['id', 'trip_date', 'township']),
             'categories' => Expense::CATEGORIES,
+            'resultCount' => $expenses->total(),
             'filters' => [
                 ...$filters,
                 'fund_pool_id' => $request->input('fund_pool_id', ''),
+                'outreach_trip_id' => $request->input('outreach_trip_id', ''),
                 'archived' => $showArchived,
             ],
             'comparison' => $this->comparison(),

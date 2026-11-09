@@ -21,6 +21,7 @@ class PublicSeo
             'impact.monthly' => self::page('monthlyImpact', 'impact.monthly', true),
             'outreach' => self::page('outreach', 'outreach', true),
             'community' => self::page('community', 'community', true),
+            'leaderboard' => self::page('leaderboard', 'leaderboard', true),
             'help' => self::page('help', 'help', true),
             'privacy-policy' => self::page('privacyPolicy', 'privacy-policy', true),
             'terms' => self::page('terms', 'terms', true),
@@ -159,6 +160,13 @@ class PublicSeo
                 'description' => [
                     'my' => 'အကူအညီလိုသူတွေ့ရင် မြို့နယ်၊ နေရာနှင့် ဖုန်းနံပါတ်ပို့ပါ။ စေတနာ့ဝန်ထမ်းအဖြစ်လည်း ပါဝင်နိုင်သည်။',
                     'en' => 'Report someone who needs help with a township, place, and phone number, or join as a volunteer.',
+                ],
+            ],
+            'leaderboard' => [
+                'title' => ['my' => 'လှူဒါန်းသူ ဂုဏ်ပြုစာရင်း', 'en' => 'Donor recognition wall'],
+                'description' => [
+                    'my' => 'အတည်ပြုပြီး လှူဒါန်းမှုများကို စုစုပေါင်းအလိုက် အဆင့်သတ်မှတ်ထားသည်။',
+                    'en' => 'Approved donations, ranked by total given.',
                 ],
             ],
             'help' => [

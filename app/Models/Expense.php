@@ -40,10 +40,11 @@ class Expense extends Model
         return $this->belongsTo(FundPool::class);
     }
 
-    public function reviewer(): BelongsTo
+    public function outreachTrip(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'reviewer_id');
+        return $this->belongsTo(OutreachTrip::class, 'outreach_trip_id');
     }
+
 
     /**
      * @param  Builder<Expense>  $query

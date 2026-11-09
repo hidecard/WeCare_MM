@@ -92,7 +92,7 @@ These are the next tasks requested after the Admin search/filter milestone. Keep
 - [x] Add donation search by tracking ID, donor phone, donor name, and payment method to the admin donation list backend.
 - [x] Add donation filter query support for pending/approved/rejected status, fund pool, date range, and amount range.
 - [x] Add spot-report filter query support for township, status, urgency, assignee, and date range.
-- [ ] Add expense filters for category, reporting period, reviewer, linked outreach trip, and amount range.
+- [x] Add expense filters for category, reporting period, reviewer, linked outreach trip, and amount range.
 - [x] Preserve filters in query strings and pagination links.
 - [x] Add clear-filter buttons and mobile-friendly filter controls.
 - [ ] Add empty states and result counts for every admin filter view.
@@ -105,7 +105,7 @@ These are the next tasks requested after the Admin search/filter milestone. Keep
 - [x] Add a clear 1–2 working-day review expectation for pending donations.
 - [x] Add a review summary before final donation submission.
 - [x] Add a confirmation checkbox for payment and donor information accuracy.
-- [ ] Add replace/remove controls for an uploaded payment slip before submit.
+- [x] Add replace/remove controls for an uploaded payment slip before submit.
 - [x] Improve tracking ID copy, success toast, certificate CTA, and loading states.
 - [x] Disable duplicate donation submission while processing and retain upload retry/error states.
 
