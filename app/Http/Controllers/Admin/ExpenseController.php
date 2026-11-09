@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use App\Models\Donation;
 use App\Models\Expense;
 use App\Models\FundPool;
+use App\Models\OutreachTrip;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

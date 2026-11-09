@@ -8,6 +8,7 @@ use App\Models\FundPool;
 use App\Models\OutreachTrip;
 use App\Models\PaymentMethod;
 use App\Models\SpotReport;
+use App\Models\Volunteer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -65,6 +66,19 @@ class HomeController extends Controller
         return Inertia::render('Leaderboard', [
             'donors' => $donors,
             'search' => $search,
+        ]);
+    }
+
+    public function volunteerLeaderboard()
+    {
+        $volunteers = Volunteer::query()
+            ->selectRaw('name, township, COUNT(*) as reports')
+            ->groupBy('name', 'township')
+            ->orderByDesc('reports')
+            ->paginate(20);
+
+        return Inertia::render('VolunteerLeaderboard', [
+            'volunteers' => $volunteers,
         ]);
     }
 

@@ -28,6 +28,7 @@ Route::get('/impact/monthly', [HomeController::class, 'monthlyReport'])->name('i
 Route::get('/outreach', [HomeController::class, 'outreach'])->name('outreach');
 Route::get('/community', [HomeController::class, 'community'])->name('community');
 Route::get('/leaderboard', [HomeController::class, 'leaderboard'])->name('leaderboard');
+Route::get('/volunteers/leaderboard', [HomeController::class, 'volunteerLeaderboard'])->name('volunteers.leaderboard');
 Route::get('/help', [HomeController::class, 'help'])->name('help');
 Route::get('/privacy-policy', [HomeController::class, 'privacyPolicy'])->name('privacy-policy');
 Route::get('/terms', [HomeController::class, 'terms'])->name('terms');

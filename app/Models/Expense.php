@@ -45,6 +45,11 @@ class Expense extends Model
         return $this->belongsTo(OutreachTrip::class, 'outreach_trip_id');
     }
 
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewer_id');
+    }
+
 
     /**
      * @param  Builder<Expense>  $query

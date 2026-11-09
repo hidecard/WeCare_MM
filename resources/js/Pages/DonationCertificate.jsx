@@ -96,6 +96,11 @@ export default function DonationCertificate({ donation = {} }) {
                                 Certificate code: {donation.certificate_code}<br />
                                 Approved: {donation.approved_date || '—'}
                             </p>
+                            <img
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(window.location.href)}`}
+                                alt="Verification QR"
+                                className="mt-3 h-16 w-16"
+                            />
                             <div className="mt-[3%] min-w-[24%] border-t border-[#9ca99f] pt-2 font-sans text-[clamp(7px,1.3vw,13px)] text-[#53645a]">
                                 WeCare Myanmar<br />Community Outreach Team
                             </div>
