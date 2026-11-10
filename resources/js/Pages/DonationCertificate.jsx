@@ -48,7 +48,7 @@ export default function DonationCertificate({ donation = {} }) {
         <>
             <Seo lang={lang} />
             <main className="min-h-screen bg-[#edf4ef] px-3 py-5 sm:px-6 sm:py-8">
-                <div className="mx-auto max-w-5xl">
+                <div className="mx-auto max-w-7xl">
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3 font-sans">
                         <Link href={route('home')} className="rounded-full border border-emerald-900/10 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50">
                             {lang === 'my' ? 'WeCare သို့ ပြန်သွားရန်' : 'Back to WeCare'}

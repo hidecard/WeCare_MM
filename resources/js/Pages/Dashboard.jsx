@@ -6,7 +6,7 @@ export default function Dashboard() {
             <Head title="Dashboard" />
 
             <div className="min-h-screen bg-[#FFFBEB] px-4 py-10 text-slate-800 sm:px-6 lg:px-8">
-                <div className="mx-auto max-w-4xl rounded-[2rem] border border-emerald-200 bg-white p-6 shadow-sm shadow-emerald-100 md:p-10">
+                <div className="mx-auto max-w-7xl rounded-[2rem] border border-emerald-200 bg-white p-6 shadow-sm shadow-emerald-100 md:p-10">
                     <div className="flex items-center justify-between gap-4">
                         <div>
                             <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Operations</p>

@@ -90,7 +90,7 @@ export default function SpotReportStatus() {
     return (
         <>
             <PublicLayout active="community" lang={lang} setLang={setLang}>
-                <main className="mx-auto max-w-3xl px-4 py-8 pb-24 sm:px-6 lg:px-8">
+                <main className="mx-auto max-w-7xl px-4 py-8 pb-24 sm:px-6 lg:px-8">
                     <Link href={route('community')} className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200"><ArrowLeft className="h-4 w-4" /> {copy('အသိုက်အဝန်းသို့', 'Back to community')}</Link>
                     <section className="mt-8 rounded-[2rem] bg-[#065F46] p-6 text-white shadow-lg shadow-emerald-900/20 sm:p-8">
                         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-100">{copy('သတင်းပေးမှုအခြေအနေ', 'Report status')}</p>

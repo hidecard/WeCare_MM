@@ -17,7 +17,7 @@ export default function Leaderboard({ donors, search = '' }) {
 
     return (
         <PublicLayout active="leaderboard" lang={lang} setLang={setLang}>
-            <div className="mx-auto max-w-3xl px-4 py-10">
+            <div className="mx-auto max-w-7xl px-4 py-10">
                 <h1 className="text-3xl font-black text-slate-900">{copy('လှူဒါန်းသူ ဂုဏ်ပြုစာရင်း', 'Donor recognition wall')}</h1>
                 <p className="mt-2 text-slate-600">{copy('အတည်ပြုပြီး လှူဒါန်းမှုများကို စုစုပေါင်းအလိုက် အဆင့်သတ်မှတ်ထားသည်။', 'Approved donations, ranked by total given.')}</p>
                 <form onSubmit={submit} className="mt-4 flex gap-2">

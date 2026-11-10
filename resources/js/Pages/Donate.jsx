@@ -238,7 +238,7 @@ export default function Donate({ fundPools = [], paymentDetails = {} }) {
     return (
         <>
             <PublicLayout active="donate" lang={lang} setLang={setLang}>
-                <main className="mx-auto max-w-3xl px-4 py-8 text-base sm:px-6 lg:px-8">
+                <main className="mx-auto max-w-7xl px-4 py-8 text-base sm:px-6 lg:px-8">
                     <div className="mb-6 flex items-center gap-3">
                         <Link href={route('home')} className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
                             <ArrowLeft className="h-4 w-4" /> {lang === 'my' ? 'မူလသို့' : 'Back home'}

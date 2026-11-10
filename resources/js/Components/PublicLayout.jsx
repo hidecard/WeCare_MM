@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Globe, HeartHandshake, Menu, X } from 'lucide-react';
+import { Globe, HeartHandshake, Menu, X, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import DonationStatusTracker from './DonationStatusTracker';
 import Seo from './Seo';
@@ -9,10 +9,16 @@ const navByLang = {
         { key: 'home', label: 'မူလ', href: route('home') },
         { key: 'about', label: 'အကြောင်း', href: route('about') },
         { key: 'donate', label: 'လှူဒါန်းရန်', href: route('donate') },
-        { key: 'impact', label: 'သက်ရောက်မှု', href: route('impact') },
-        { key: 'outreach', label: 'လမ်းဘေးကူညီရေး', href: route('outreach') },
-        { key: 'community', label: 'အသိုက်အဝန်း', href: route('community') },
-        { key: 'volunteers', label: 'စေတနာ့ဝန်ထမ်း', href: route('volunteers.leaderboard') },
+        {
+            key: 'getInvolved',
+            label: 'ပါဝင်ရန်',
+            children: [
+                { key: 'impact', label: 'သက်ရောက်မှု', href: route('impact') },
+                { key: 'outreach', label: 'လမ်းဘေးကူညီရေး', href: route('outreach') },
+                { key: 'community', label: 'အသိုက်အဝန်း', href: route('community') },
+                { key: 'volunteers', label: 'စေတနာ့ဝန်ထမ်း', href: route('volunteers.leaderboard') },
+            ],
+        },
         { key: 'leaderboard', label: 'စာရင်း', href: route('leaderboard') },
         { key: 'help', label: 'အကူအညီ', href: route('help') },
         { key: 'status', label: 'ခြေရာခံ', href: route('donations.status-page') },
@@ -21,10 +27,16 @@ const navByLang = {
         { key: 'home', label: 'Home', href: route('home') },
         { key: 'about', label: 'About', href: route('about') },
         { key: 'donate', label: 'Donate', href: route('donate') },
-        { key: 'impact', label: 'Impact', href: route('impact') },
-        { key: 'outreach', label: 'Outreach', href: route('outreach') },
-        { key: 'community', label: 'Community', href: route('community') },
-        { key: 'volunteers', label: 'Volunteers', href: route('volunteers.leaderboard') },
+        {
+            key: 'getInvolved',
+            label: 'Get involved',
+            children: [
+                { key: 'impact', label: 'Impact', href: route('impact') },
+                { key: 'outreach', label: 'Outreach', href: route('outreach') },
+                { key: 'community', label: 'Community', href: route('community') },
+                { key: 'volunteers', label: 'Volunteers', href: route('volunteers.leaderboard') },
+            ],
+        },
         { key: 'leaderboard', label: 'Leaderboard', href: route('leaderboard') },
         { key: 'help', label: 'Help', href: route('help') },
         { key: 'status', label: 'Track gift', href: route('donations.status-page') },
@@ -33,8 +45,28 @@ const navByLang = {
 
 export default function PublicLayout({ children, active = 'home', lang = 'my', setLang }) {
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [dropdownOpen, setDropdownOpen] = useState(null);
+    const [closeTimer, setCloseTimer] = useState(null);
     const navItems = navByLang[lang] ?? navByLang.my;
     const { seo, support = {} } = usePage().props;
+
+    const isActiveItem = (item) => active === item.key || (item.children?.some(c => active === c.key));
+
+    const openDropdown = (key) => {
+        if (closeTimer) clearTimeout(closeTimer);
+        setCloseTimer(null);
+        setDropdownOpen(key);
+    };
+
+    const closeDropdown = () => {
+        const timer = setTimeout(() => setDropdownOpen(null), 150);
+        setCloseTimer(timer);
+    };
+
+    const cancelClose = () => {
+        if (closeTimer) clearTimeout(closeTimer);
+        setCloseTimer(null);
+    };
 
     return (
         <div lang={lang === 'my' ? 'my' : 'en'} className="min-h-screen bg-[#FFFBEB] text-slate-800">
@@ -54,9 +86,38 @@ export default function PublicLayout({ children, active = 'home', lang = 'my', s
                         </div>
                     </Link>
 
-                    <nav className="hidden items-center gap-1 md:flex" aria-label={lang === 'my' ? 'အဓိက မီနူး' : 'Main navigation'}>
+                    <nav className="hidden items-center gap-1 md:flex relative" aria-label={lang === 'my' ? 'အဓိက မီနူး' : 'Main navigation'}>
                         {navItems.map((item) => {
-                            const isActive = active === item.key;
+                            const isActive = isActiveItem(item);
+                            if (item.children) {
+                                return (
+                                    <div key={item.key} className="relative" onMouseEnter={cancelClose} onMouseLeave={closeDropdown}>
+                                        <button
+                                            type="button"
+                                            onMouseEnter={() => openDropdown(item.key)}
+                                            className={`flex items-center gap-1 rounded-full px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300 ${isActive ? 'bg-white/15 font-semibold text-white' : 'text-emerald-50/90 hover:bg-white/10 hover:text-white'}`}
+                                            aria-haspopup="true"
+                                            aria-expanded={dropdownOpen === item.key}
+                                        >
+                                            {item.label}
+                                            <ChevronDown className={`h-3 w-3 transition ${dropdownOpen === item.key ? 'rotate-180' : ''}`} />
+                                        </button>
+                                        {dropdownOpen === item.key && (
+                                            <div className="absolute left-0 top-full min-w-[180px] rounded-xl border border-emerald-900/10 bg-white/95 backdrop-blur py-2 shadow-xl z-50" onMouseEnter={cancelClose} onMouseLeave={closeDropdown}>
+                                                {item.children.map((child) => (
+                                                    <Link
+                                                        key={child.href}
+                                                        href={child.href}
+                                                        className={`block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 ${active === child.key ? 'font-semibold text-emerald-700' : ''}`}
+                                                    >
+                                                        {child.label}
+                                                    </Link>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            }
                             return (
                                 <Link
                                     key={item.href}
@@ -97,17 +158,48 @@ export default function PublicLayout({ children, active = 'home', lang = 'my', s
                 {mobileOpen && (
                     <div id="mobile-navigation" className="border-t border-white/10 bg-[#065F46] px-4 py-3 md:hidden">
                         <div className="flex flex-col gap-1">
-                            {navItems.map((item) => (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    aria-current={active === item.key ? 'page' : undefined}
-                                    className={`rounded-xl px-3 py-3 text-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300 ${active === item.key ? 'bg-white/15 font-semibold text-white' : 'text-emerald-50/90 hover:bg-white/10'}`}
-                                    onClick={() => setMobileOpen(false)}
-                                >
-                                    {item.label}
-                                </Link>
-                            ))}
+                            {navItems.map((item) => {
+                                if (item.children) {
+                                    const isActive = isActiveItem(item);
+                                    return (
+                                        <div key={item.key} className="rounded-xl overflow-hidden">
+                                            <button
+                                                type="button"
+                                                onClick={() => setDropdownOpen(dropdownOpen === item.key ? null : item.key)}
+                                                className={`w-full flex items-center justify-between px-3 py-3 text-sm transition ${isActive ? 'bg-white/15 font-semibold text-white' : 'text-emerald-50/90 hover:bg-white/10'}`}
+                                            >
+                                                {item.label}
+                                                <ChevronDown className={`h-4 w-4 ${dropdownOpen === item.key ? 'rotate-180' : ''}`} />
+                                            </button>
+                                            {dropdownOpen === item.key && (
+                                                <div className="border-t border-white/10 pl-4 py-2 space-y-1">
+                                                    {item.children.map((child) => (
+                                                        <Link
+                                                            key={child.href}
+                                                            href={child.href}
+                                                            className={`block px-3 py-2 text-sm rounded-md transition ${active === child.key ? 'bg-white/15 font-semibold text-white' : 'text-emerald-50/90 hover:bg-white/10'}`}
+                                                            onClick={() => setMobileOpen(false)}
+                                                        >
+                                                            {child.label}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                }
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        aria-current={active === item.key ? 'page' : undefined}
+                                        className={`rounded-xl px-3 py-3 text-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300 ${active === item.key ? 'bg-white/15 font-semibold text-white' : 'text-emerald-50/90 hover:bg-white/10'}`}
+                                        onClick={() => setMobileOpen(false)}
+                                    >
+                                        {item.label}
+                                    </Link>
+                                );
+                            })}
                         </div>
                     </div>
                 )}

@@ -74,7 +74,7 @@ export default function HelpCenter() {
 
     return (
         <PublicLayout active="help" lang={lang} setLang={setLang}>
-            <main className="mx-auto max-w-6xl px-4 py-8 pb-24 sm:px-6 lg:px-8">
+            <main className="mx-auto max-w-7xl px-4 py-8 pb-24 sm:px-6 lg:px-8">
                 <Link href={route('home')} className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200"><ArrowLeft className="h-4 w-4" /> {copy('မူလသို့', 'Back home')}</Link>
                 <section className="mt-8 rounded-[2rem] bg-[#065F46] p-6 text-white shadow-lg shadow-emerald-900/20 sm:p-8">
                     <div className="flex items-start gap-4"><div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#F59E0B] text-[#065F46]"><HeartHandshake className="h-6 w-6" /></div><div><p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-100">{copy('အကူအညီနှင့် ဆက်သွယ်ရန်', 'Help & support')}</p><h1 className="mt-2 text-3xl font-black md:text-5xl">{copy('မေးစရာရှိပါသလား?', 'How can we help?')}</h1><p className="mt-4 max-w-2xl text-base leading-relaxed text-emerald-50/90">{copy('လှူဒါန်းမှု၊ ပြေစာ၊ ခြေရာခံခြင်း၊ သတင်းပေးခြင်းနှင့် စေတနာ့ဝန်ထမ်းကိစ္စများအတွက် အဖြေများနှင့် ဆက်သွယ်ရန်နည်းလမ်းများကို ဒီနေရာမှာ တွေ့နိုင်ပါသည်။', 'Find answers and verified support options for donations, payment slips, tracking, reports, and volunteering.')}</p></div></div>

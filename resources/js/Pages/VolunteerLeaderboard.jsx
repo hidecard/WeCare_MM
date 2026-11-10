@@ -8,7 +8,7 @@ export default function VolunteerLeaderboard({ volunteers }) {
     const items = volunteers?.data ?? volunteers ?? [];
     return (
         <PublicLayout active="volunteers" lang={lang} setLang={setLang}>
-            <div className="mx-auto max-w-3xl px-4 py-10">
+            <div className="mx-auto max-w-7xl px-4 py-10">
                 <h1 className="text-3xl font-black text-slate-900">{copy('စေတနာ့ဝန်ထမ်း ဂုဏ်ပြုစာရင်း', 'Volunteer leaderboard')}</h1>
                 <p className="mt-2 text-slate-600">{copy('စေတနာ့ဝန်ထမ်းများကို ပါဝင်မှုအလိုက် အဆင့်သတ်မှတ်ထားသည်။', 'Volunteers ranked by participation.')}</p>
                 <ol className="mt-6 space-y-3">
